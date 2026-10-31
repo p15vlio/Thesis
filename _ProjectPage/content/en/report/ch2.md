@@ -1,0 +1,102 @@
+This chapter places the system in its conceptual and technological context. It first examines the short-term rental market and the changing expectations of guests, and then analyses the four foundational bodies of technical knowledge on which the design rests: the data isolation models in multi-tenancy architectures, the principles of Clean Architecture and the Port/Adapter pattern, the Kotlin Multiplatform (KMP) code-sharing framework, and compilation to WebAssembly for execution in the browser. Finally, it records and analyses the related work and existing systems in the field of digital hospitality. The analysis in this chapter remains descriptive and comparative at the level of theoretical concepts, while the specific architectural choices of the system and the full analysis of the trade-offs are developed in detail in Chapter 4.
+
+## 2.1 The Short-Term Rental Market and Digital Services
+
+Within a decade, short-term home rental evolved from a marginal sharing phenomenon into a dominant pillar of the global tourism industry. Guttentag [2] analyses the rise of platforms such as Airbnb in light of the theory of disruptive innovation: a service that initially addressed underserved segments of the market (travellers on a limited budget, guests looking for larger living spaces, or non-professional hosts with unused properties), which gradually improved the reliability and quality of its services and ended up competing directly with traditional hotels. Today the scale of the market is impressive, with active listings exceeding 7.7 million worldwide [1].
+
+Alongside the quantitative expansion of the market, travellers' expectations have also changed substantially. In the empirical study by Guttentag et al. [3] on guests' motivations, it is found that although demand is divided into distinct segments — from guests who focus strictly on the financial dimension to those who seek a local experience or home comforts — the reference point for evaluating a stay remains consistently the hotel experience. The modern guest, accustomed to the comforts of a hotel (such as room service, immediate attention and the mini-bar), expects a corresponding level of comfort in a self-contained accommodation as well. However, the operating model of short-term rental relies on the absence of permanent on-site staff, which makes it impossible to provide such services in the traditional way.
+
+This creates a pronounced asymmetry in the guest's digital experience. The stage before arrival — search, comparison, booking, payment and automated entry to the accommodation (self check-in) — is characterised by full digitisation and a seamless (frictionless) experience. By contrast, the stage after arrival entirely lacks comparable digital infrastructure at the level of the accommodation. When the guest wants a product or service during their stay, they are forced either to use general delivery platforms that are unaware of the particularities of the accommodation, or to contact the host individually, burdening them with processes that cannot scale.
+
+The situation is further complicated by technological fragmentation in the hospitality sector. Aldebert et al. [4], studying innovation patterns in tourism, point out that digital solutions are usually developed piecemeal by a multitude of unconnected providers. In practice, an owner who manages multiple accommodations has to combine a property management system (PMS) for calendars and bookings, external communication channels (such as messaging apps) and external ordering platforms. None of these tools unifies the commercial relationship between guest and host during the stay, that is, the provision of selected products and services directly from the accommodation itself, with central price control and immediate order tracking.
+
+This digital gap lies at the level of the on-site experience inside the accommodation and concerns many independent managers at the same time. The nature of the problem makes it clear that the appropriate architectural approach is a multi-tenant SaaS platform, which provides a single functional core but guarantees absolute separation of the business data between owners.
+
+## 2.2 Multi-Tenant Architecture and Data Isolation Models
+
+A multi-tenant system serves multiple independent organisations or customers (tenants) simultaneously from a single running instance of the application and a shared computing infrastructure, keeping their data and configurations strictly separated. This model is distinguished from the single-tenant approach, in which each customer requires a separate, isolated installation of software and infrastructure. The main advantage of multi-tenancy lies in economies of scale through the sharing of computing, network and storage resources, as well as in simpler maintenance and upgrades. At the same time, the central technical challenge is ensuring isolation, so that any data leakage between tenants is ruled out, whether due to a code error or a malicious action.
+
+In the context of the system under study, the tenants are the owners of the accommodations. The data managed by the platform — financial records, product catalogues, personal stay data and order history — is of critical commercial importance, which makes the reliability of isolation a fundamental requirement.
+
+The international literature (Krebs et al. [8], Microsoft Azure Architecture Patterns [13]) records three basic models for organising data in multi-tenancy environments, each representing a different balance point between the degree of isolation, the operating cost and the administrative complexity:
+
+1. **Shared Schema:** All tenants share the same database and the same tables. Records are separated by a discriminator column (tenant_id) included in every table, and every query must apply the corresponding filter. This approach offers the greatest resource savings and the simplest process for onboarding new tenants (a simple record insert). However, isolation depends entirely on the correctness of the application logic. Omitting the tenant_id filter in a query can lead to data leakage between different customers. In addition, maintenance tasks such as taking backups or restoring data for a specific tenant become particularly difficult.
+1. **Schema-per-Tenant:** All tenants share the same physical database and the same connection pool, but each tenant has its own independent schema, that is, a distinct namespace with an identical table structure. Isolation is enforced structurally by the security mechanism of the database management system: a query executed within one schema cannot access the tables of another schema without an explicit change of the search_path. Onboarding a new tenant is implemented by automatically running DDL scripts to create the new schema. This model achieves strong structural isolation while keeping the infrastructure operating cost low, since a single set of connections serves the whole system.
+1. **Database-per-Tenant:** Each tenant has a fully independent physical or logical database, possibly on a separate server. This model offers the greatest possible data isolation, allows individual performance tuning and simplifies compliance with strict privacy regulations. However, the infrastructure cost and the operational burden grow linearly with the number of tenants, requiring multiple connection pools, multiple backup jobs and complex management of running upgrades (migrations) across hundreds of independent databases.
+
+The table below summarises and compares the three isolation models:
+
+| Isolation Model | Degree of Isolation | Infrastructure Operating Cost | Migration Complexity | Data Leakage Risk |
+|---|---|---|---|---|
+| Shared Schema | Low (logical, at code level) | Minimal (shared resources) | Low (a single DDL run) | High (an error in a WHERE clause) |
+| Schema-per-Tenant | High (structural, at RDBMS level) | Moderate (shared connection pool) | Moderate (a run per tenant schema) | Minimal (RDBMS namespace boundary) |
+| Database-per-Tenant | Absolute (full physical separation) | High (separate resources per tenant) | High (multiple databases) | None (isolated database) |
+
+Beyond the storage strategy, a multi-tenancy system requires reliable mechanisms for propagating the tenant context along the whole request-processing path (tenant context propagation), for automating the creation of new schemas during onboarding, and for the effective management of the platform's shared metadata.
+
+The specific decision to adopt the schema-per-tenant model for the proposed system, together with the relevant architectural justification, is analysed in §4.5.3.
+
+## 2.3 Clean Architecture and the Port/Adapter (Hexagonal) Pattern
+
+In the traditional layered architecture (n-tier architecture), source code dependencies usually follow the direction of the control flow downwards: the presentation layer depends on the business logic, and the business logic depends directly on the data layer, which in turn is bound to the specific database technology and the frameworks in use. This structure has a significant drawback: the core of the business logic, which is the most stable and valuable element of a system, ends up directly dependent on volatile implementation details and external technologies.
+
+Clean Architecture, as formulated by Martin [5], reverses this direction of dependencies through the Dependency Rule: source code dependencies must always point inwards, towards the layers of higher policy and abstraction. The system is organised in concentric layers:
+
+- **Entities:** Encapsulate the enterprise-wide business rules.
+- **Use Cases:** Orchestrate the flow of data to and from the entities, implementing the application-specific rules.
+- **Interface Adapters:** Convert data from the form required by the business logic to the form required by external entities (controllers, presenters, gateways).
+- **Frameworks & Drivers:** The outermost layer, which includes tools such as the database, the web framework and device interfaces.
+
+The inner layers know nothing about the outer layers. When an inner layer requires data or services from an outer one, it defines a port interface itself. The outer layer implements this interface, ensuring that the control flow can move outwards while the source code dependency remains pointed towards the core.
+
+Hexagonal Architecture, also known as the Ports and Adapters pattern [9], expresses the same basic principle with an emphasis on the boundaries of the application. The core is placed inside a hexagon and communicates with the outside environment exclusively through ports, which fall into two categories:
+
+- **Driving / Inbound Ports:** Define the operations that the core offers to the outside world. Adapters of this type (such as REST controllers, CLI handlers or UI components) drive the core by calling the appropriate methods of the use cases.
+- **Driven / Outbound Ports:** Define the services that the core requires from external systems (such as storage mechanisms, payment gateways or notification services). In this case, the core drives the corresponding adapters, which implement the declared interfaces.
+
+The combination of Clean Architecture and the Port/Adapter pattern offers three critical advantages:
+
+1. **Testability:** The core can be tested fully through unit tests without needing to run a database, network calls or external services.
+1. **Infrastructure Independence:** The database, the networking framework or the user interface can be upgraded or replaced without any change to the business logic.
+1. **Adapter Interchangeability:** A real third-party service and an emulated adapter implement the same port, allowing the system to be fully developed and validated even before commercial agreements with external providers are concluded.
+
+In the proposed system, the term Port/Adapter is applied specifically to the isolation of the external services (§4.4): the card payment acquirer, the food delivery platforms, email sending, the business registry and the address geocoding service. The broader rule of Clean Architecture governs the overall hierarchy of the modules (§4.2).
+
+## 2.4 Kotlin Multiplatform — Technical Overview and Evaluation
+
+Code sharing across different execution platforms is a long-standing pursuit of software engineering. Historically, four main strategies have been adopted:
+
+1. **Fully Independent Development:** Each platform is implemented separately in its native language (such as Swift for iOS, Kotlin for Android, TypeScript for the Web), maximising performance but multiplying the maintenance cost and the risk of business rules diverging.
+1. **Runtime-based / Hybrid:** Use of a common runtime environment that hides the platform, as in hybrid applications that run inside a webview, with known problems of performance lag and a non-native feel of the interface.
+1. **Cross-Platform UI Frameworks:** Use of a specialised framework that draws the graphical elements directly, bypassing the platform's native widgets, such as Flutter through the Skia graphics engine or React Native through an intermediate communication bridge [23].
+1. **Shared Business Logic with Native Compilation:** Sharing the logic and the data models without imposing a common execution environment, by compiling the shared code directly into the native form of each platform.
+
+Kotlin Multiplatform (KMP) falls under the fourth strategy, while also offering the option of sharing the user interface through Compose Multiplatform. Comparative studies of cross-platform frameworks (Nawrocki et al. [23], Punia et al. [6]) show that, in contrast to approaches that require intermediate interpretation bridges (such as the JavaScript bridge of classic React Native), KMP allows the generated code to run directly on the physical target.
+
+The KMP mechanism rests on three central pillars [7]:
+
+1. **Source Sets:** The source code is organised hierarchically. The commonMain set contains pure, platform-independent Kotlin code, while the platform-specific source sets (jvmMain, androidMain, wasmJsMain) contain code adapted to the particularities of each environment.
+1. **The expect / actual mechanism:** When the shared code needs to interact with platform capabilities, it declares an expected signature using the expect keyword. Each individual platform provides the corresponding actual implementation. This mechanism is resolved entirely at compile time, with no overhead at runtime.
+1. **Compilation Targets:** The same shared source set is compiled by different backends of the Kotlin compiler: Kotlin/JVM to Java bytecode for the backend server, Kotlin/Android to DEX bytecode for the kiosk tablet, and Kotlin/Wasm to WebAssembly binary code for the browser. The compiler enforces strict type checking: any change to a shared DTO or domain interface that breaks a consumer fails immediately at build time.
+
+The official kotlinx.serialization library contributes decisively to data sharing. Based on a compiler plugin with no use of reflection at runtime, it allows shared classes to be marked with the @Serializable annotation, automatically generating JSON serialisation and deserialisation code for all compilation targets.
+
+As regards technological maturity, JetBrains declared the core of KMP Stable in late 2023 [12]. However, maturity varies by target: while the JVM and Android targets are fully mature and proven at industrial scale, the WebAssembly target (Kotlin/Wasm) is a newer technology.
+
+WebAssembly (Wasm) is defined as a compact, portable and safe binary instruction format for a stack machine, executing at close to native speed inside the isolated environment (sandbox) of the browser [14]. Although it was originally designed for low-level languages without automatic memory management (such as C++ and Rust), the recent WasmGC specification built garbage collection support (WasmGC) directly into the browser's engine. This allowed Kotlin/Wasm to be compiled directly to Wasm without the need to embed heavy runtimes, providing high performance for Compose Multiplatform, which draws the user interface directly onto an HTML5 canvas surface.
+
+The practical evaluation of this architectural approach and the choice of KMP over alternative solutions are analysed at length in §4.5.1, §4.5.4 and §4.5.5.
+
+## 2.5 Related Systems and Academic Work
+
+The proposed system sits at the intersection of three distinct areas: multi-tenant SaaS platforms, fixed self-service systems (kiosks) inside an accommodation, and the automated routing of orders in short-term rental. In the international literature there is no single system that covers all of these dimensions at once. Instead, the relevant scientific and technological knowledge is distributed across three separate areas:
+
+1. **Interactive In-Room Device Systems in Hospitality:** In the traditional hotel sector, the use of dedicated tablet devices inside the rooms (such as the commercial solutions SuitePad and Crave Interactive) is established practice. At the academic level, Zhu and Morosan [27] carried out extensive empirical research on guests' intention to use interactive in-room technologies, showing that providing an easy-to-use on-site digital point significantly increases guest satisfaction and the consumption of additional services. In parallel, Kim and Qu [28] showed that guests look for self-service technologies that offer a seamless (frictionless) experience and do not require complicated identification procedures or personal installation of applications. However, these systems are designed strictly for single hotel units (single-tenant logic), connect exclusively with traditional hotel PMS and rely on the existence of on-site floor staff and a reception — elements that are entirely absent from short-term rental.
+1. **Order Aggregation and Logistics Platforms:** The widespread adoption of online food ordering and courier platforms has produced an extensive literature on order management and route assignment. Nevertheless, these systems focus exclusively on the geographic location of the end consumer. They ignore the concept of the physical accommodation altogether, offer no way for the host to manage on-site inventory, and do not allow the owner to configure their own personalised catalogue of products and services. For this reason, these platforms are treated in this thesis as external providers integrated into the system: the owner chooses which platforms are offered at each accommodation, and the guest orders from their restaurants through the same device with which they buy the accommodation's products.
+1. **Engineering of Multi-Tenant SaaS Systems:** As analysed in §2.2, academic research in software engineering (Krebs et al. [8], Microsoft [13]) has developed robust theoretical models for data isolation and resource management in cloud applications. However, these studies concentrate on general business applications (enterprise SaaS) and do not examine the particular challenges that arise from connecting physical kiosk devices to isolated data schemas.
+
+In addition to these three areas, a system aimed at real businesses can make use of public data infrastructure instead of asking the user to type in information that already exists in reliable sources. In Greece, the General Commercial Registry (GEMI) makes the published details of businesses (name, legal form, registered seat, status) available as open data through an API [30]. Similarly, OpenStreetMap is a global, freely available set of geographic data created by its own users [32], on top of which geocoding services operate, that is, converting an address into coordinates and vice versa [31]. Using such sources reduces data-entry errors and speeds up the onboarding of new owners and accommodations, at the cost that the system depends on the availability and terms of use of third-party services.
+
+Overall, the literature on short-term rental [2][3][4] remains oriented towards the management and economic analysis of tourism, approaching the guest experience descriptively, without proposing software architectures.
+
+In this light, the contribution of this thesis lies in architectural integration: it combines the principles of Clean Architecture and multi-tenant data architecture with Kotlin Multiplatform technology, creating a working system adapted to the real needs of decentralised short-term rental.

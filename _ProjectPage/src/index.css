@@ -1,0 +1,104 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --bg: #ffffff;
+  --surface: #f6f6f7;
+  --line: #e4e4e7;
+  --fg: #18181b;
+  --muted: #71717a;
+  --accent: #0d9488;
+  --accent-soft: #0d948814;
+}
+
+.dark {
+  --bg: #0e0e10;
+  --surface: #151518;
+  --line: #26262b;
+  --fg: #ececee;
+  --muted: #8d8d96;
+  --accent: #2dd4bf;
+  --accent-soft: #2dd4bf14;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-line: var(--line);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+}
+
+:root {
+  color-scheme: light;
+}
+
+.dark {
+  color-scheme: dark;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--muted) 45%, transparent) transparent;
+}
+
+body {
+  @apply bg-bg text-fg antialiased;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+@plugin "@tailwindcss/typography";
+
+.prose {
+  --tw-prose-body: var(--fg);
+  --tw-prose-headings: var(--fg);
+  --tw-prose-lead: var(--muted);
+  --tw-prose-links: var(--accent);
+  --tw-prose-bold: var(--fg);
+  --tw-prose-counters: var(--muted);
+  --tw-prose-bullets: var(--muted);
+  --tw-prose-hr: var(--line);
+  --tw-prose-quotes: var(--fg);
+  --tw-prose-quote-borders: var(--accent);
+  --tw-prose-captions: var(--muted);
+  --tw-prose-code: var(--fg);
+  --tw-prose-pre-code: var(--fg);
+  --tw-prose-pre-bg: var(--surface);
+  --tw-prose-th-borders: var(--line);
+  --tw-prose-td-borders: var(--line);
+}
+
+/* Code highlighting (highlight.js classes) */
+:root {
+  --hl-keyword: #a21caf;
+  --hl-string: #15803d;
+  --hl-number: #b45309;
+  --hl-comment: #71717a;
+  --hl-title: #0369a1;
+  --hl-attr: #be123c;
+}
+
+.dark {
+  --hl-keyword: #e879f9;
+  --hl-string: #86efac;
+  --hl-number: #fdba74;
+  --hl-comment: #8d8d96;
+  --hl-title: #7dd3fc;
+  --hl-attr: #fda4af;
+}
+
+.hljs-keyword, .hljs-selector-tag, .hljs-literal, .hljs-doctag { color: var(--hl-keyword); }
+.hljs-string, .hljs-regexp, .hljs-addition { color: var(--hl-string); }
+.hljs-number, .hljs-symbol, .hljs-bullet { color: var(--hl-number); }
+.hljs-comment, .hljs-quote, .hljs-meta { color: var(--hl-comment); font-style: italic; }
+.hljs-title, .hljs-section, .hljs-built_in, .hljs-type, .hljs-class .hljs-title { color: var(--hl-title); }
+.hljs-attr, .hljs-attribute, .hljs-variable, .hljs-template-variable, .hljs-name, .hljs-deletion { color: var(--hl-attr); }
+
+.ref-flash {
+  background: var(--accent-soft);
+  border-radius: 0.375rem;
+  box-shadow: 0 0 0 0.5rem var(--accent-soft);
+}

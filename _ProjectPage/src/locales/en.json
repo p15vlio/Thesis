@@ -1,0 +1,67 @@
+{
+  "app": {
+    "title": "Design and Implementation of a Digital Ordering and Services System for Short-Term Rental Accommodations"
+  },
+  "ui": {
+    "toggleSidebar": "Toggle sidebar",
+    "toggleTheme": "Toggle theme",
+    "toggleWidth": "Toggle reading width",
+    "wide": "Wide view",
+    "narrow": "Narrow view",
+    "onThisPage": "On this page",
+    "previous": "Previous",
+    "next": "Next",
+    "language": "Language"
+  },
+  "footer": {
+    "author": "Konstantinos Vlioras",
+    "university": "Ionian University",
+    "department": "Department of Informatics",
+    "rights": "All rights reserved"
+  },
+  "nav": {
+    "overview": {
+      "title": "Overview",
+      "items": {
+        "introduction": "Introduction",
+        "architecture": "Architecture",
+        "technologies": "Technologies"
+      }
+    },
+    "gettingStarted": {
+      "title": "Getting Started",
+      "items": {
+        "installation": "Installation",
+        "flows": "Flows"
+      }
+    },
+    "report": {
+      "title": "Thesis Report",
+      "items": {
+        "ch1": "1. Introduction",
+        "ch2": "2. Theoretical Background and Related Work",
+        "ch3": "3. Requirements Analysis",
+        "ch4": "4. System Architecture",
+        "ch5": "5. Database Design",
+        "ch6": "6. Backend Implementation",
+        "ch7": "7. Owner Web Panel",
+        "ch8": "8. Guest Kiosk Application",
+        "ch9": "9. System Integration and Demonstration",
+        "ch10": "10. Conclusions and Future Work",
+        "bibliography": "Bibliography"
+      }
+    },
+    "api": {
+      "title": "API Reference",
+      "items": {}
+    },
+    "appendix": {
+      "title": "Appendix",
+      "items": {}
+    },
+    "about": {
+      "title": "About",
+      "items": {}
+    }
+  }
+}

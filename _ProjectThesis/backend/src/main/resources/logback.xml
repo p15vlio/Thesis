@@ -1,0 +1,16 @@
+<configuration>
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <logger name="net.kustax.opendelivery" level="INFO" />
+    <logger name="io.ktor" level="INFO" />
+    <logger name="org.jetbrains.exposed" level="INFO" />
+    <logger name="com.zaxxer.hikari" level="INFO" />
+
+    <root level="INFO">
+        <appender-ref ref="STDOUT" />
+    </root>
+</configuration>

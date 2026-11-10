@@ -1,0 +1,1950 @@
+{
+ "ActivateDeviceRequest": [
+  {
+   "name": "activationCode",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "androidDeviceId",
+   "type": "String",
+   "required": true
+  }
+ ],
+ "ChangePasswordRequest": [
+  {
+   "name": "currentPassword",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "newPassword",
+   "type": "String",
+   "required": true
+  }
+ ],
+ "ConnectFoodPlatformRequest": [
+  {
+   "name": "apiKey",
+   "type": "String",
+   "required": true
+  }
+ ],
+ "CreateDeviceRequest": [
+  {
+   "name": "name",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "androidDeviceId",
+   "type": "String",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  }
+ ],
+ "CreateOrderRequest": [
+  {
+   "name": "guestEmail",
+   "type": "String",
+   "required": true,
+   "nullable": true
+  },
+  {
+   "name": "type",
+   "type": "String",
+   "required": true,
+   "enum": [
+    "IN_ROOM_STORE",
+    "FOOD_DELIVERY"
+   ]
+  },
+  {
+   "name": "items",
+   "type": "List<OrderItemRequest>",
+   "required": true
+  },
+  {
+   "name": "notes",
+   "type": "String",
+   "required": true,
+   "nullable": true
+  },
+  {
+   "name": "platform",
+   "type": "String",
+   "required": false,
+   "nullable": true,
+   "default": "null",
+   "enum": [
+    "EFOOD",
+    "WOLT",
+    "BOX"
+   ]
+  },
+  {
+   "name": "restaurantId",
+   "type": "String",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  }
+ ],
+ "CreateOwnerRequest": [
+  {
+   "name": "companyName",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "distinctiveTitle",
+   "type": "String",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  },
+  {
+   "name": "vatId",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "gemhNumber",
+   "type": "String",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  },
+  {
+   "name": "legalForm",
+   "type": "String",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  },
+  {
+   "name": "companyActivity",
+   "type": "String",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  },
+  {
+   "name": "streetName",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "streetNo",
+   "type": "String",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  },
+  {
+   "name": "postalCode",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "city",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "contactFirstName",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "contactLastName",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "contactEmail",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "contactPhone",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "secondaryContactName",
+   "type": "String",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  },
+  {
+   "name": "secondaryContactPhone",
+   "type": "String",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  },
+  {
+   "name": "secondaryContactEmail",
+   "type": "String",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  },
+  {
+   "name": "website",
+   "type": "String",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  },
+  {
+   "name": "notes",
+   "type": "String",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  }
+ ],
+ "CreateProductRequest": [
+  {
+   "name": "name",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "description",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "category",
+   "type": "String",
+   "required": true,
+   "enum": [
+    "BEVERAGE",
+    "HOT_DRINK",
+    "FOOD",
+    "SNACK",
+    "ALCOHOL",
+    "PERSONAL_CARE",
+    "PHARMACY",
+    "OTHER"
+   ]
+  },
+  {
+   "name": "basePrice",
+   "type": "Long",
+   "required": true
+  },
+  {
+   "name": "imageUrl",
+   "type": "String",
+   "required": true,
+   "nullable": true
+  }
+ ],
+ "CreatePropertyRequest": [
+  {
+   "name": "name",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "streetName",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "streetNo",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "postalCode",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "area",
+   "type": "String",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  },
+  {
+   "name": "level",
+   "type": "Int",
+   "required": false,
+   "default": "0"
+  },
+  {
+   "name": "nameOnDoorbell",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "contactPhone",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "city",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "notes",
+   "type": "String",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  },
+  {
+   "name": "latitude",
+   "type": "Double",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  },
+  {
+   "name": "longitude",
+   "type": "Double",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  },
+  {
+   "name": "wifiName",
+   "type": "String",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  },
+  {
+   "name": "wifiPassword",
+   "type": "String",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  },
+  {
+   "name": "checkOutTime",
+   "type": "String",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  },
+  {
+   "name": "houseRules",
+   "type": "String",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  }
+ ],
+ "ImportProductsRequest": [
+  {
+   "name": "platform",
+   "type": "String",
+   "required": true,
+   "enum": [
+    "EFOOD",
+    "WOLT",
+    "BOX"
+   ]
+  },
+  {
+   "name": "catalogProductIds",
+   "type": "List<String>",
+   "required": true
+  }
+ ],
+ "InitiatePaymentRequest": [
+  {
+   "name": "orderId",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "entryMode",
+   "type": "String",
+   "required": true,
+   "enum": [
+    "CARD_CONTACTLESS",
+    "CARD_CHIP",
+    "CARD_MAGSTRIPE"
+   ]
+  },
+  {
+   "name": "pinVerified",
+   "type": "Boolean",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  },
+  {
+   "name": "cardLast4",
+   "type": "String",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  }
+ ],
+ "LoginRequest": [
+  {
+   "name": "email",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "password",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "role",
+   "type": "String",
+   "required": true,
+   "enum": [
+    "PLATFORM_ADMIN",
+    "OWNER"
+   ]
+  },
+  {
+   "name": "schemaName",
+   "type": "String",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  }
+ ],
+ "OrderItemRequest": [
+  {
+   "name": "productId",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "quantity",
+   "type": "Int",
+   "required": true
+  }
+ ],
+ "RefreshTokenRequest": [
+  {
+   "name": "refreshToken",
+   "type": "String",
+   "required": true
+  }
+ ],
+ "SendTestEmailRequest": [
+  {
+   "name": "toEmail",
+   "type": "String",
+   "required": true
+  }
+ ],
+ "SetProductAvailabilityRequest": [
+  {
+   "name": "isAvailable",
+   "type": "Boolean",
+   "required": true
+  }
+ ],
+ "SetPropertyFoodPlatformsRequest": [
+  {
+   "name": "platforms",
+   "type": "List<String>",
+   "required": true
+  }
+ ],
+ "UpdateGemhSettingsRequest": [
+  {
+   "name": "apiKey",
+   "type": "String",
+   "required": true
+  }
+ ],
+ "UpdateOrderStatusRequest": [
+  {
+   "name": "status",
+   "type": "String",
+   "required": true,
+   "enum": [
+    "PENDING",
+    "CONFIRMED",
+    "PREPARING",
+    "OUT_FOR_DELIVERY",
+    "DELIVERED",
+    "CANCELLED"
+   ]
+  }
+ ],
+ "UpdateOwnerRequest": [
+  {
+   "name": "companyName",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "distinctiveTitle",
+   "type": "String",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  },
+  {
+   "name": "gemhNumber",
+   "type": "String",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  },
+  {
+   "name": "legalForm",
+   "type": "String",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  },
+  {
+   "name": "companyActivity",
+   "type": "String",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  },
+  {
+   "name": "streetName",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "streetNo",
+   "type": "String",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  },
+  {
+   "name": "postalCode",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "city",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "contactFirstName",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "contactLastName",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "contactPhone",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "secondaryContactName",
+   "type": "String",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  },
+  {
+   "name": "secondaryContactPhone",
+   "type": "String",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  },
+  {
+   "name": "secondaryContactEmail",
+   "type": "String",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  },
+  {
+   "name": "website",
+   "type": "String",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  },
+  {
+   "name": "notes",
+   "type": "String",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  }
+ ],
+ "UpdateProductRequest": [
+  {
+   "name": "name",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "description",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "basePrice",
+   "type": "Long",
+   "required": true
+  },
+  {
+   "name": "imageUrl",
+   "type": "String",
+   "required": true,
+   "nullable": true
+  },
+  {
+   "name": "isAvailable",
+   "type": "Boolean",
+   "required": true
+  }
+ ],
+ "UpdatePropertyRequest": [
+  {
+   "name": "name",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "streetName",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "streetNo",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "postalCode",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "area",
+   "type": "String",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  },
+  {
+   "name": "level",
+   "type": "Int",
+   "required": false,
+   "default": "0"
+  },
+  {
+   "name": "nameOnDoorbell",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "contactPhone",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "city",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "notes",
+   "type": "String",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  },
+  {
+   "name": "latitude",
+   "type": "Double",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  },
+  {
+   "name": "longitude",
+   "type": "Double",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  },
+  {
+   "name": "wifiName",
+   "type": "String",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  },
+  {
+   "name": "wifiPassword",
+   "type": "String",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  },
+  {
+   "name": "checkOutTime",
+   "type": "String",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  },
+  {
+   "name": "houseRules",
+   "type": "String",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  }
+ ],
+ "UpdateSmtpSettingsRequest": [
+  {
+   "name": "host",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "port",
+   "type": "Int",
+   "required": true
+  },
+  {
+   "name": "security",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "username",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "password",
+   "type": "String",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  },
+  {
+   "name": "fromAddress",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "fromName",
+   "type": "String",
+   "required": true
+  }
+ ],
+ "AdminOrderSummaryResponse": [
+  {
+   "name": "totalActiveOrders",
+   "type": "Int",
+   "required": true
+  },
+  {
+   "name": "countsByStatus",
+   "type": "Map<String",
+   "required": true
+  }
+ ],
+ "AuditLogResponse": [
+  {
+   "name": "id",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "actorId",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "actorRole",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "action",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "targetType",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "targetId",
+   "type": "String",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  },
+  {
+   "name": "schemaName",
+   "type": "String",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  },
+  {
+   "name": "details",
+   "type": "String",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  },
+  {
+   "name": "createdAt",
+   "type": "Long",
+   "required": true
+  }
+ ],
+ "CatalogProductResponse": [
+  {
+   "name": "id",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "platform",
+   "type": "String",
+   "required": true,
+   "enum": [
+    "EFOOD",
+    "WOLT",
+    "BOX"
+   ]
+  },
+  {
+   "name": "name",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "description",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "category",
+   "type": "String",
+   "required": true,
+   "enum": [
+    "BEVERAGE",
+    "HOT_DRINK",
+    "FOOD",
+    "SNACK",
+    "ALCOHOL",
+    "PERSONAL_CARE",
+    "PHARMACY",
+    "OTHER"
+   ]
+  },
+  {
+   "name": "priceCents",
+   "type": "Long",
+   "required": true
+  },
+  {
+   "name": "brand",
+   "type": "String",
+   "required": true,
+   "nullable": true
+  }
+ ],
+ "CompanyLookupResponse": [
+  {
+   "name": "vatId",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "gemhNumber",
+   "type": "String",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  },
+  {
+   "name": "companyName",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "distinctiveTitle",
+   "type": "String",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  },
+  {
+   "name": "legalForm",
+   "type": "String",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  },
+  {
+   "name": "companyActivity",
+   "type": "String",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  },
+  {
+   "name": "streetName",
+   "type": "String",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  },
+  {
+   "name": "streetNo",
+   "type": "String",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  },
+  {
+   "name": "postalCode",
+   "type": "String",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  },
+  {
+   "name": "city",
+   "type": "String",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  },
+  {
+   "name": "website",
+   "type": "String",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  },
+  {
+   "name": "statusDescription",
+   "type": "String",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  },
+  {
+   "name": "isActive",
+   "type": "Boolean",
+   "required": true
+  }
+ ],
+ "DashboardSummaryResponse": [
+  {
+   "name": "totalProperties",
+   "type": "Int",
+   "required": true
+  },
+  {
+   "name": "activeProperties",
+   "type": "Int",
+   "required": true
+  },
+  {
+   "name": "totalDevices",
+   "type": "Int",
+   "required": true
+  },
+  {
+   "name": "activeDevices",
+   "type": "Int",
+   "required": true
+  },
+  {
+   "name": "pendingOrders",
+   "type": "Int",
+   "required": true
+  },
+  {
+   "name": "confirmedOrders",
+   "type": "Int",
+   "required": true
+  },
+  {
+   "name": "preparingOrders",
+   "type": "Int",
+   "required": true
+  },
+  {
+   "name": "outForDeliveryOrders",
+   "type": "Int",
+   "required": true
+  }
+ ],
+ "DeviceResolveResponse": [
+  {
+   "name": "deviceId",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "schemaName",
+   "type": "String",
+   "required": true
+  }
+ ],
+ "DeviceResponse": [
+  {
+   "name": "id",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "propertyId",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "name",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "androidDeviceId",
+   "type": "String",
+   "required": true,
+   "nullable": true
+  },
+  {
+   "name": "isActive",
+   "type": "Boolean",
+   "required": true
+  },
+  {
+   "name": "isKioskEnabled",
+   "type": "Boolean",
+   "required": true
+  },
+  {
+   "name": "lastSeenAt",
+   "type": "Long",
+   "required": true,
+   "nullable": true
+  },
+  {
+   "name": "activationCode",
+   "type": "String",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  },
+  {
+   "name": "activatedAt",
+   "type": "Long",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  },
+  {
+   "name": "qrCodeBase64",
+   "type": "String",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  },
+  {
+   "name": "token",
+   "type": "String",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  }
+ ],
+ "ErrorResponse": [
+  {
+   "name": "code",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "message",
+   "type": "String",
+   "required": true
+  }
+ ],
+ "FoodMenuItemResponse": [
+  {
+   "name": "id",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "restaurantId",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "name",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "description",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "priceCents",
+   "type": "Long",
+   "required": true
+  },
+  {
+   "name": "category",
+   "type": "String",
+   "required": true,
+   "enum": [
+    "BEVERAGE",
+    "HOT_DRINK",
+    "FOOD",
+    "SNACK",
+    "ALCOHOL",
+    "PERSONAL_CARE",
+    "PHARMACY",
+    "OTHER"
+   ]
+  }
+ ],
+ "FoodPlatformResponse": [
+  {
+   "name": "platform",
+   "type": "String",
+   "required": true,
+   "enum": [
+    "EFOOD",
+    "WOLT",
+    "BOX"
+   ]
+  },
+  {
+   "name": "connected",
+   "type": "Boolean",
+   "required": true
+  },
+  {
+   "name": "connectedAt",
+   "type": "Long",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  }
+ ],
+ "FoodRestaurantResponse": [
+  {
+   "name": "platform",
+   "type": "String",
+   "required": true,
+   "enum": [
+    "EFOOD",
+    "WOLT",
+    "BOX"
+   ]
+  },
+  {
+   "name": "id",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "name",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "cuisine",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "rating",
+   "type": "Double",
+   "required": true
+  },
+  {
+   "name": "deliveryFeeCents",
+   "type": "Long",
+   "required": true
+  },
+  {
+   "name": "etaMinutes",
+   "type": "Int",
+   "required": true
+  },
+  {
+   "name": "minOrderCents",
+   "type": "Long",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  }
+ ],
+ "GemhSettingsResponse": [
+  {
+   "name": "apiKeySet",
+   "type": "Boolean",
+   "required": true
+  }
+ ],
+ "GeocodedAddressResponse": [
+  {
+   "name": "displayName",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "streetName",
+   "type": "String",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  },
+  {
+   "name": "streetNo",
+   "type": "String",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  },
+  {
+   "name": "postalCode",
+   "type": "String",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  },
+  {
+   "name": "area",
+   "type": "String",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  },
+  {
+   "name": "city",
+   "type": "String",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  },
+  {
+   "name": "country",
+   "type": "String",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  },
+  {
+   "name": "latitude",
+   "type": "Double",
+   "required": true
+  },
+  {
+   "name": "longitude",
+   "type": "Double",
+   "required": true
+  }
+ ],
+ "ImportProductsResponse": [
+  {
+   "name": "imported",
+   "type": "List<ProductResponse>",
+   "required": true
+  },
+  {
+   "name": "skipped",
+   "type": "List<String>",
+   "required": true
+  }
+ ],
+ "OrderItemResponse": [
+  {
+   "name": "id",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "orderId",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "productId",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "productName",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "unitPrice",
+   "type": "Long",
+   "required": true
+  },
+  {
+   "name": "quantity",
+   "type": "Int",
+   "required": true
+  },
+  {
+   "name": "subtotal",
+   "type": "Long",
+   "required": true
+  }
+ ],
+ "OrderResponse": [
+  {
+   "name": "id",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "deviceId",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "propertyId",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "guestEmail",
+   "type": "String",
+   "required": true,
+   "nullable": true
+  },
+  {
+   "name": "status",
+   "type": "String",
+   "required": true,
+   "enum": [
+    "PENDING",
+    "CONFIRMED",
+    "PREPARING",
+    "OUT_FOR_DELIVERY",
+    "DELIVERED",
+    "CANCELLED"
+   ]
+  },
+  {
+   "name": "type",
+   "type": "String",
+   "required": true,
+   "enum": [
+    "IN_ROOM_STORE",
+    "FOOD_DELIVERY"
+   ]
+  },
+  {
+   "name": "externalPlatform",
+   "type": "String",
+   "required": true,
+   "nullable": true,
+   "enum": [
+    "EFOOD",
+    "WOLT",
+    "BOX"
+   ]
+  },
+  {
+   "name": "externalOrderId",
+   "type": "String",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  },
+  {
+   "name": "restaurantId",
+   "type": "String",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  },
+  {
+   "name": "restaurantName",
+   "type": "String",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  },
+  {
+   "name": "deliveryFee",
+   "type": "Long",
+   "required": false,
+   "default": "0"
+  },
+  {
+   "name": "estimatedDeliveryAt",
+   "type": "Long",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  },
+  {
+   "name": "totalAmount",
+   "type": "Long",
+   "required": true
+  },
+  {
+   "name": "notes",
+   "type": "String",
+   "required": true,
+   "nullable": true
+  },
+  {
+   "name": "createdAt",
+   "type": "Long",
+   "required": true
+  },
+  {
+   "name": "updatedAt",
+   "type": "Long",
+   "required": true
+  },
+  {
+   "name": "items",
+   "type": "List<OrderItemResponse>",
+   "required": true
+  }
+ ],
+ "OwnerResponse": [
+  {
+   "name": "id",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "displayName",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "companyName",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "distinctiveTitle",
+   "type": "String",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  },
+  {
+   "name": "vatId",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "gemhNumber",
+   "type": "String",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  },
+  {
+   "name": "legalForm",
+   "type": "String",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  },
+  {
+   "name": "companyActivity",
+   "type": "String",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  },
+  {
+   "name": "streetName",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "streetNo",
+   "type": "String",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  },
+  {
+   "name": "postalCode",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "city",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "contactFirstName",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "contactLastName",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "contactEmail",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "contactPhone",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "secondaryContactName",
+   "type": "String",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  },
+  {
+   "name": "secondaryContactPhone",
+   "type": "String",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  },
+  {
+   "name": "secondaryContactEmail",
+   "type": "String",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  },
+  {
+   "name": "website",
+   "type": "String",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  },
+  {
+   "name": "notes",
+   "type": "String",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  },
+  {
+   "name": "schemaName",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "isActive",
+   "type": "Boolean",
+   "required": true
+  },
+  {
+   "name": "createdAt",
+   "type": "Long",
+   "required": true
+  },
+  {
+   "name": "temporaryPassword",
+   "type": "String",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  }
+ ],
+ "OwnerWithStatsResponse": [
+  {
+   "name": "owner",
+   "type": "OwnerResponse",
+   "required": true
+  },
+  {
+   "name": "propertyCount",
+   "type": "Int",
+   "required": true
+  },
+  {
+   "name": "deviceCount",
+   "type": "Int",
+   "required": true
+  },
+  {
+   "name": "productCount",
+   "type": "Int",
+   "required": true
+  }
+ ],
+ "PaymentResponse": [
+  {
+   "name": "id",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "orderId",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "entryMode",
+   "type": "String",
+   "required": true,
+   "enum": [
+    "CARD_CONTACTLESS",
+    "CARD_CHIP",
+    "CARD_MAGSTRIPE"
+   ]
+  },
+  {
+   "name": "cardLast4",
+   "type": "String",
+   "required": true,
+   "nullable": true
+  },
+  {
+   "name": "status",
+   "type": "String",
+   "required": true,
+   "enum": [
+    "PENDING",
+    "COMPLETED",
+    "FAILED",
+    "REFUNDED"
+   ]
+  },
+  {
+   "name": "declineReason",
+   "type": "String",
+   "required": true,
+   "nullable": true
+  },
+  {
+   "name": "amount",
+   "type": "Long",
+   "required": true
+  },
+  {
+   "name": "providerTransactionId",
+   "type": "String",
+   "required": true,
+   "nullable": true
+  },
+  {
+   "name": "createdAt",
+   "type": "Long",
+   "required": true
+  },
+  {
+   "name": "orderStatus",
+   "type": "String",
+   "required": false,
+   "nullable": true,
+   "default": "null",
+   "enum": [
+    "PENDING",
+    "CONFIRMED",
+    "PREPARING",
+    "OUT_FOR_DELIVERY",
+    "DELIVERED",
+    "CANCELLED"
+   ]
+  },
+  {
+   "name": "message",
+   "type": "String",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  }
+ ],
+ "ProductResponse": [
+  {
+   "name": "id",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "name",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "description",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "category",
+   "type": "String",
+   "required": true,
+   "enum": [
+    "BEVERAGE",
+    "HOT_DRINK",
+    "FOOD",
+    "SNACK",
+    "ALCOHOL",
+    "PERSONAL_CARE",
+    "PHARMACY",
+    "OTHER"
+   ]
+  },
+  {
+   "name": "basePrice",
+   "type": "Long",
+   "required": true
+  },
+  {
+   "name": "imageUrl",
+   "type": "String",
+   "required": true,
+   "nullable": true
+  },
+  {
+   "name": "isAvailable",
+   "type": "Boolean",
+   "required": true
+  },
+  {
+   "name": "createdAt",
+   "type": "Long",
+   "required": true
+  },
+  {
+   "name": "disabledPropertyIds",
+   "type": "List<String>",
+   "required": false,
+   "default": "emptyList("
+  }
+ ],
+ "PropertyFoodPlatformsResponse": [
+  {
+   "name": "platforms",
+   "type": "List<String>",
+   "required": true
+  }
+ ],
+ "PropertyResponse": [
+  {
+   "name": "id",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "name",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "streetName",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "streetNo",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "postalCode",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "area",
+   "type": "String",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  },
+  {
+   "name": "level",
+   "type": "Int",
+   "required": true
+  },
+  {
+   "name": "nameOnDoorbell",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "contactPhone",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "city",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "country",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "timezone",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "notes",
+   "type": "String",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  },
+  {
+   "name": "latitude",
+   "type": "Double",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  },
+  {
+   "name": "longitude",
+   "type": "Double",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  },
+  {
+   "name": "wifiName",
+   "type": "String",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  },
+  {
+   "name": "wifiPassword",
+   "type": "String",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  },
+  {
+   "name": "checkOutTime",
+   "type": "String",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  },
+  {
+   "name": "houseRules",
+   "type": "String",
+   "required": false,
+   "nullable": true,
+   "default": "null"
+  },
+  {
+   "name": "isActive",
+   "type": "Boolean",
+   "required": true
+  },
+  {
+   "name": "createdAt",
+   "type": "Long",
+   "required": true
+  }
+ ],
+ "SmtpSettingsResponse": [
+  {
+   "name": "host",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "port",
+   "type": "Int",
+   "required": true
+  },
+  {
+   "name": "security",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "username",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "passwordSet",
+   "type": "Boolean",
+   "required": true
+  },
+  {
+   "name": "fromAddress",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "fromName",
+   "type": "String",
+   "required": true
+  }
+ ],
+ "TokenResponse": [
+  {
+   "name": "accessToken",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "refreshToken",
+   "type": "String",
+   "required": true
+  },
+  {
+   "name": "role",
+   "type": "String",
+   "required": true,
+   "enum": [
+    "PLATFORM_ADMIN",
+    "OWNER",
+    "DEVICE"
+   ]
+  },
+  {
+   "name": "expiresAt",
+   "type": "Long",
+   "required": true
+  }
+ ]
+}

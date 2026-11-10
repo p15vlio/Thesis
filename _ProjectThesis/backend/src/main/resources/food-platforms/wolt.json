@@ -1,0 +1,60 @@
+{
+  "restaurants": [
+    {
+      "id": "wolt-2001",
+      "name": "Gyro Bar Monastiraki",
+      "cuisine": "Gyros & Street Food",
+      "rating": 4.8,
+      "deliveryFeeCents": 190,
+      "etaMinutes": 25,
+      "minOrderCents": 700,
+      "menu": [
+        { "id": "wolt-2001-01", "name": "Gyros Hirino", "description": "Pork gyros in warm pita with tzatziki, tomato and fries", "priceCents": 380, "category": "Gyros" },
+        { "id": "wolt-2001-02", "name": "Gyros Kotopoulo", "description": "Chicken gyros in warm pita with tzatziki, tomato and fries", "priceCents": 400, "category": "Gyros" },
+        { "id": "wolt-2001-03", "name": "Kalamaki Hirino", "description": "Pork skewer in pita with onion, parsley and paprika", "priceCents": 380, "category": "Souvlaki" },
+        { "id": "wolt-2001-04", "name": "Pita Falafel", "description": "Falafel, hummus, salad and pickles in pita", "priceCents": 450, "category": "Vegetarian" },
+        { "id": "wolt-2001-05", "name": "Gyros Merida", "description": "Gyros plate with fries, pita, tzatziki and salad", "priceCents": 1050, "category": "Plates" },
+        { "id": "wolt-2001-06", "name": "Hummus me Pita", "description": "Chickpea dip with olive oil and warm pita", "priceCents": 500, "category": "Starters" },
+        { "id": "wolt-2001-07", "name": "Patates Tiganites", "description": "Crispy fries with oregano", "priceCents": 350, "category": "Sides" },
+        { "id": "wolt-2001-08", "name": "Amita Portokali 330ml", "description": "Orange soft drink", "priceCents": 180, "category": "Drinks" }
+      ]
+    },
+    {
+      "id": "wolt-2002",
+      "name": "Sushi Yasu Kolonaki",
+      "cuisine": "Sushi & Asian",
+      "rating": 4.5,
+      "deliveryFeeCents": 290,
+      "etaMinutes": 40,
+      "minOrderCents": 1500,
+      "menu": [
+        { "id": "wolt-2002-01", "name": "Salmon Nigiri (2 tem.)", "description": "Two pieces of hand-pressed nigiri with fresh salmon", "priceCents": 650, "category": "Nigiri" },
+        { "id": "wolt-2002-02", "name": "California Roll (8 tem.)", "description": "Crab, avocado and cucumber with tobiko", "priceCents": 950, "category": "Rolls" },
+        { "id": "wolt-2002-03", "name": "Spicy Tuna Roll (8 tem.)", "description": "Tuna, spicy mayo and spring onion", "priceCents": 1050, "category": "Rolls" },
+        { "id": "wolt-2002-04", "name": "Sake Maki (6 tem.)", "description": "Salmon maki rolls with nori and rice", "priceCents": 750, "category": "Rolls" },
+        { "id": "wolt-2002-05", "name": "Edamame", "description": "Steamed soy beans with sea salt", "priceCents": 500, "category": "Starters" },
+        { "id": "wolt-2002-06", "name": "Chicken Teriyaki me Ryzi", "description": "Grilled chicken in teriyaki glaze with steamed rice", "priceCents": 1100, "category": "Mains" },
+        { "id": "wolt-2002-07", "name": "Ramen Miso", "description": "Miso broth with noodles, egg, corn and spring onion", "priceCents": 1250, "category": "Mains" },
+        { "id": "wolt-2002-08", "name": "Mochi Fraoula", "description": "Rice cake filled with strawberry ice cream", "priceCents": 550, "category": "Desserts" }
+      ]
+    },
+    {
+      "id": "wolt-2003",
+      "name": "Fournos tis Marias",
+      "cuisine": "Bakery & Pies",
+      "rating": 4.7,
+      "deliveryFeeCents": 190,
+      "etaMinutes": 30,
+      "minOrderCents": 600,
+      "menu": [
+        { "id": "wolt-2003-01", "name": "Tyropita", "description": "Flaky cheese pie made with feta and anthotyro", "priceCents": 280, "category": "Pies" },
+        { "id": "wolt-2003-02", "name": "Spanakopita", "description": "Phyllo pie with spinach, leek and feta", "priceCents": 300, "category": "Pies" },
+        { "id": "wolt-2003-03", "name": "Bougatsa me Krema", "description": "Warm custard pie dusted with icing sugar and cinnamon", "priceCents": 320, "category": "Pies" },
+        { "id": "wolt-2003-04", "name": "Koulouri Thessalonikis", "description": "Sesame bread ring", "priceCents": 100, "category": "Bakery" },
+        { "id": "wolt-2003-05", "name": "Sandwich Gallopoula", "description": "Smoked turkey, gouda, tomato and lettuce on a baguette", "priceCents": 420, "category": "Sandwiches" },
+        { "id": "wolt-2003-06", "name": "Freddo Espresso", "description": "Iced double espresso", "priceCents": 280, "category": "Drinks" },
+        { "id": "wolt-2003-07", "name": "Freddo Cappuccino", "description": "Iced double espresso topped with cold milk foam", "priceCents": 320, "category": "Drinks" }
+      ]
+    }
+  ]
+}

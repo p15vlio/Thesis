@@ -1,194 +1,215 @@
+This chapter describes the architecture of the system and the technology choices it rests on: the module structure (§4.1), how Clean Architecture is applied (§4.2), how every request reaches the right tenant (§4.3), how the external services are connected (§4.4) and, finally, the design decisions together with the alternatives that were considered (§4.5).
+
 ## 4.1 Architecture Overview and Module Structure
 
-The proposed system is implemented as a single code repository (monorepo), which contains five distinct modules that together define the logic, the data models and the individual applications of the platform. Choosing a monorepo architecture ensures that the shared modules (:domain and :data) are kept continuously in sync at the same version for every consumer, allowing the compiler to detect any type mismatch or change to a DTO contract immediately as a compile-time error on all platforms at once, preventing failures at runtime.
+The system lives in a single code repository (monorepo) with five modules, which together hold the logic, the data models and the applications of the platform. Because everything is in one repository, the shared modules (:domain and :data) always have the same version for every module that uses them, and the compiler catches a type mismatch or a change to a DTO immediately as a compile-time error on every platform at once, instead of it surfacing at runtime.
 
-The five modules of the architecture are organised hierarchically in two levels: the **shared modules** (:domain, :data) and the **application modules** (:backend, :owner-web, :app).
+The five modules fall into two levels: the **shared modules** (:domain, :data) and the **application modules** (:backend, :owner-web, :app).
 
-The :domain module is the independent core of the system. It contains the central business entities (Order, Product, Device, Property), the repository interfaces and the port interfaces for connecting to external services. This core depends on no external framework, infrastructure library or other module of the project. It consists of pure Kotlin code and is compiled simultaneously into three distinct artifacts: Java bytecode (JVM jar) for the backend, an Android library (AAR/jar) for the kiosk application, and a WebAssembly binary file (wasmJs bundle) for the browser.
+The :domain module is the core of the system. It contains the main business entities (Order, Product, Device, Property), the repository interfaces and the port interfaces for the external services. It depends on no framework, infrastructure library or other module. It is written entirely in Kotlin and compiled for two targets: Java bytecode (a JVM jar), used by the backend and by the Android kiosk application (the Android build converts it to DEX bytecode), and WebAssembly (a wasmJs bundle) for the browser. The same code thus runs in three different environments.
 
-The :data module depends only on :domain and on the kotlinx.serialization library. It defines the data transfer objects (Data Transfer Objects - DTOs), as well as the requests and responses of the REST API, implemented as @Serializable Kotlin classes. This module is also compiled for all three targets (JVM, Android, wasmJs), forming the shared communication contract between server and clients.
+The :data module depends only on :domain and the kotlinx.serialization library. It defines the Data Transfer Objects (DTOs), that is, the requests and responses of the REST API [25], as Kotlin classes marked with the @Serializable annotation. It is compiled for the same two targets (JVM, wasmJs); the JVM artifact is also used by the kiosk application, and the module is the shared communication contract between the server and the clients.
 
-The application modules depend on :data (and through it on :domain), strictly observing the direction of dependencies [24]:
+The application modules depend on :data and :domain, never the other way round [26]:
 
-- :backend is a JVM application that implements the REST API through Ktor, takes care of database access through JetBrains Exposed and manages the connection to PostgreSQL.
-- :owner-web is a management application for the browser, compiled to WebAssembly (wasmJs) and executed through Compose Multiplatform.
-- :app is the accommodation's kiosk application for the Android environment, implemented with Jetpack Compose.
+- :backend is a JVM application that implements the REST API with Ktor and talks to PostgreSQL through JetBrains Exposed.
+- :owner-web is the management application for the browser, written with Compose Multiplatform and compiled to WebAssembly (wasmJs).
+- :app is the property's kiosk application for Android, written with Jetpack Compose.
 
-The direction of dependencies is strictly enforced by the Gradle build system [24]: any circular dependency, or any attempt at a reference from :domain to :data or to an application module, is rejected immediately as a compilation error.
+The direction of the dependencies follows from what each module declares in the Gradle multi-project build [26]: because :domain declares no dependency on :data or on any application module, any reference to them fails at compile time. Figure 4.1 shows the modules and the direction of the dependencies.
+
+![Figure 4.1: Module structure of the monorepo and the direction of dependencies.](/media/fig-4-1-modules.png)
 
 ## 4.2 Clean Architecture as a Structural Constraint
 
-The system's architecture faithfully follows the principles of Clean Architecture [5], as formulated by Robert C. Martin. The fundamental rule of this approach is the Dependency Rule: source code dependencies always point inwards, towards the layers of higher policy and abstraction. The outer layers (infrastructure, networking libraries, user interface, databases) have full knowledge of the core, but the core remains completely unaware of any outer element.
+The system's architecture follows the principles of Clean Architecture [5], as formulated by Robert C. Martin. Here the Dependency Rule (§2.3) means that the outer layers (infrastructure, networking libraries, user interface, database) depend on the core, while the core does not depend on them.
 
-In the proposed system, this rule is enforced as a structural constraint of the build system. The :domain module has zero external dependencies: it does not import Ktor, it does not import Exposed, nor any other library bound to a specific platform. As a result, its code is compiled independently and identically in three radically different execution environments (JVM, Android, WebAssembly). An Order entity defined in :domain is represented in exactly the same form and with the same meaning on the backend server, on the Android tablet and in the owner's browser.
+In the system, this rule is enforced by the build system itself. :domain has no external dependency: it uses neither Ktor nor Exposed nor any other library dependent on a specific platform. An Order entity of :domain has exactly the same form and meaning on the server, on the Android tablet and in the owner's browser.
 
-The repository interfaces are a characteristic application of the principle. The OrderRepository interface is defined inside :domain and specifies the retrieval and storage method signatures that the business logic requires. The specific implementation (ExposedOrderRepository) lives in the :backend module, using the Exposed DSL and the PostgreSQL database. If PostgreSQL were ever replaced by another storage technology, the change would be limited strictly to the :backend level. No domain entity, no service and no route would be affected. Likewise, the choice of HTTP framework (Ktor) remains a detail of the outer infrastructure layer, leaving the core of the system untouched.
+The repository interfaces are a typical example. OrderRepository is defined in :domain and describes the signatures of the retrieval and storage methods (method signatures) the business logic needs, while its implementation (ExposedOrderRepository) lives in :backend and uses the Exposed DSL and PostgreSQL. If PostgreSQL were replaced by another storage technology, the entities and interfaces of :domain would not change; the changes would stay within :backend. There, mainly the repository implementations would change, but also some services: those that set the boundaries of a transaction themselves call the tenantQuery helper directly, which is built on Exposed (§5.6). In other words, the service layer lives in :backend rather than in the core, a choice that keeps the code simple but couples the services closely to the transaction mechanism. Likewise, the choice of HTTP framework (Ktor) concerns only the routes and does not affect the core. Figure 4.2 shows the layers of the system and the direction of their dependencies.
+
+![Figure 4.2: Applying Clean Architecture — dependencies point towards the core.](/media/fig-4-2-clean-architecture.png)
 
 ## 4.3 Multi-Tenancy — Request Flow Architecture
 
-The system organises data and access rights in a strict hierarchy of five levels: **Platform → Owner → Property → Device → Guest**.
+Data and access rights are organised in a five-level hierarchy: **Platform → Owner → Property → Device → Guest**.
 
-The Platform Admin belongs to the platform schema (public) and has oversight of the whole system. Each owner (Owner) holds an exclusive schema in the database (tenant\_{id}), inside which their properties, devices, products and orders are recorded. The physical kiosk devices do not have a separate schema, but are linked unambiguously to a specific property of the owner. The guest has no account or credentials; their presence and their placement in the correct tenant schema are determined automatically through the authenticated kiosk device they use.
+The Platform Admin belongs to the platform's schema (public) and oversees the whole system. Each owner has their own schema in the database (tenant\_{id}), which holds their properties, devices, products and orders. Kiosk devices have no schema of their own; each one belongs to a specific property of the owner. The guest has no account or credentials; the tenant their orders belong to follows from the authenticated kiosk device they use. Figure 4.3 shows the hierarchy and how it maps onto the PostgreSQL schemas.
 
-The dynamic routing of every incoming HTTP request to the appropriate schema is achieved through four cooperating mechanisms:
+![Figure 4.3: Entity hierarchy and mapping to PostgreSQL schemas.](/media/fig-4-3-hierarchy.png)
 
-1. **Cryptographic embedding of the Tenant Claim:** When the user or device is authenticated, the JWT access token that is issued includes the claim schemaName (e.g. tenant_a1b2c3 for an owner or for an activated kiosk device, and null for the Platform Admin). This claim is cryptographically signed, ruling out any tampering on the client side.
-1. **Verification and extraction through Middleware:** Ktor's JWT authentication plugin verifies the token's signature on every incoming request and extracts the value of schemaName.
-1. **Propagation of the TenantContext through Coroutines:** The schema value is stored in a TenantContext instance (an implementation of CoroutineContext.Element), which is propagated automatically through the coroutine scope along the whole asynchronous call chain of the request, without needing to be passed explicitly as a parameter to the methods.
-1. **Dynamic schema selection in the database:** The convenience function tenantQuery {} retrieves the TenantContext from the current coroutine scope, verifies that the schema name has the expected form (tenant\_ followed by twelve hexadecimal characters) and executes, as the first statement of the Exposed transaction, the statement SET LOCAL search_path TO {schemaName}. As a consequence, PostgreSQL automatically redirects all the transaction's SQL queries to the correct schema. The SET LOCAL form limits the setting to the duration of the transaction, so that a connection returning to the shared connection pool does not "carry" one tenant's schema into the next request, while the format check rules out inserting arbitrary text into the SQL statement.
+Every HTTP request reaches the right schema in four steps:
 
-Through this architecture, the repositories are not aware of the multi-tenant nature of the system: they execute plain queries of the form SELECT \* FROM products, while the infrastructure ensures that the table name always corresponds to the schema of the specific tenant. If a request tries to access the database without an active TenantContext (e.g. because of an error in the pipeline), execution is stopped immediately with a security exception, ruling out reading or altering another tenant's data.
+1. **The tenant inside the token:** When a user or a device is authenticated, the JWT access token that is issued contains the schemaName claim (e.g. tenant_a1b2c3d4e5f6 for an owner or for an activated kiosk device, and null for the Platform Admin). The claim is signed, so the client cannot change it.
+1. **Verification in the middleware:** Ktor's JWT authentication plugin verifies the token's signature on every request and reads the schemaName.
+1. **Carried by the TenantContext:** The schema is stored in a TenantContext (an implementation of CoroutineContext.Element), which follows the request's coroutine automatically through the whole chain of calls, without being passed from method to method as a parameter.
+1. **Schema selection in the database:** The tenantQuery {} helper reads the TenantContext, checks that the schema name has the expected form (tenant\_ followed by twelve hexadecimal characters) and runs SET LOCAL search_path TO {schemaName} as the first statement of the Exposed transaction. All the queries of the transaction then run in the tenant's schema. SET LOCAL applies only to the transaction, so a connection that returns to the shared connection pool does not "carry" one tenant's schema into the next request, while the format check prevents arbitrary text from being injected into the SQL statement.
 
-## 4.4 Port/Adapter Pattern — Integrating External Services
+The repositories therefore do not need to know that the system is multi-tenant: they run plain queries such as SELECT \* FROM products, and the products table is the one of the request's tenant. If a request tries to reach the database without a TenantContext (e.g. because of a bug in the request flow), execution stops with an error, so that no other tenant's data is read or altered. Figure 4.4 summarises how a request is routed to the right tenant schema.
 
-The integration of external services without burdening or binding the business logic is implemented through the Port/Adapter pattern (Hexagonal Architecture) [9]. According to this pattern, the core of the application interacts with the outside world exclusively through ports (port interfaces) defined in the :domain module. Each external service is represented by an interface, while the specific implementations (adapters) live in the :backend module and are injected when the application starts through a dependency injection mechanism.
+![Figure 4.4: Routing a request to the right tenant schema through the TenantContext.](/media/fig-4-3b-request-routing.png)
+
+## 4.4 The Port/Adapter Pattern — Integrating External Services
+
+External services are connected without affecting the business logic through the Port/Adapter pattern (Hexagonal Architecture) [7]. The core communicates with the outside world only through ports (port interfaces, §2.3) defined in :domain. Each external service corresponds to one interface, while the implementations (adapters) live in :backend and are given to the services through their constructors at startup (manual wiring in the configureRouting() function, without a dependency injection framework).
 
 The system defines six port interfaces:
 
-- PaymentGateway: Port connecting to the card payment acquirer, for approving a transaction and refunding money.
-- FoodDeliveryProvider: Port connecting to food ordering platforms (efood, Wolt, Box): verifying the access key, retrieving restaurants, menus and the product catalogue, and submitting and cancelling an order.
-- FoodOrderEventListener: A reverse-direction port, through which a platform informs the system of the progress of an order. It corresponds to the notification address (webhook) that a real platform would call.
-- NotificationService: Port for sending welcome messages and receipts by email.
-- CompanyRegistry: Port for looking up the published details of a business based on the VAT ID.
-- Geocoder: Port for address search and for converting coordinates into an address.
+- PaymentGateway: The connection to the card payment acquirer, which approves a transaction or carries out a refund.
+- FoodDeliveryProvider: The connection to the food ordering platforms: verifying the access key, restaurants, menus and the product catalogue, submitting and cancelling an order.
+- FoodOrderEventListener: An inbound port (driving port, §2.3), through which a platform informs the system of an order's progress. It corresponds to the notification address (webhook) that a real platform would call.
+- NotificationService: Sending welcome messages, password reset messages and receipts by email.
+- CompanyRegistry: Looking up a business's published details by VAT ID.
+- Geocoder: Searching for addresses and converting coordinates into an address.
 
-The business services (OrderService, PaymentService, OwnerService, etc.) communicate exclusively with the abstractions above, remaining fully isolated from the communication protocols, libraries or data formats of the specific providers.
+The business services (OrderService, PaymentService, OwnerService and others) call only these interfaces and know nothing about each provider's protocols, libraries or data formats.
 
-In this prototype, three ports are implemented by adapters connected to real services and two by emulated adapters (§3.4.1):
+In the prototype, three ports are implemented by adapters connected to real services and two by emulated adapters (§3.4.1); the sixth, FoodOrderEventListener, is implemented by a backend service:
 
-- The SmtpEmailAdapter sends real messages over SMTP [33], with the server settings read from the database on every send.
-- The GemhCompanyRegistryAdapter calls the GEMI open data API [30].
-- The NominatimGeocoderAdapter calls the Nominatim service [31], observing at process level the limit of one request per second set by its usage policy.
-- The EmulatedPaymentAdapter decides whether to approve or decline a transaction based on the way the card was read and the result of the PIN check.
-- The EmulatedEfoodAdapter, EmulatedWoltAdapter and EmulatedBoxAdapter, which share the EmulatedFoodPlatformAdapter class as a common base, read their restaurants, menus and catalogues from data files and report the progress of every accepted order through the FoodOrderEventListener, whose implementation is provided by the FoodOrderEventHandler service.
+- SmtpEmailAdapter sends real messages over SMTP [8] and reads the mail server settings from the database on every send.
+- The CompanyRegistry adapter calls the company registry's open data API [9].
+- The Geocoder adapter calls the public geocoding service [10] and keeps, for the whole process, to the limit of one request per second set by its usage policy [24].
+- EmulatedPaymentAdapter answers in place of a real acquirer and approves or declines a transaction based on how the card was read.
+- The three emulated delivery platform adapters, with the shared base class EmulatedFoodPlatformAdapter, read their restaurants, menus and catalogues from data files and report the progress of every order they accepted through the FoodOrderEventListener, which the FoodOrderEventHandler service implements.
 
-The architectural strength of the pattern shows in how easy it is to move to a production environment: to replace the EmulatedPaymentAdapter with the adapter of a real payment acquirer, all that is needed is to write the new class in :backend and change one line in the configureRouting() function, where all the dependencies are assembled. No domain entity, no service and no route needs to be changed. The coexistence of real and emulated adapters behind interfaces of the same form is, moreover, the practical verification of this property within the prototype itself.
+The benefit of the pattern shows in the move to production: to replace EmulatedPaymentAdapter with the adapter of a real payment acquirer, provided that the acquirer's interface corresponds to the port, it is enough to write the new class in :backend and change one line in the configureRouting() function, where the dependencies are assembled. The domain entities, services and routes do not change. That real and emulated adapters already coexist behind interfaces of the same form shows this property in practice within the prototype itself.
 
-The type of each order (type) determines which ports are involved in fulfilling it. An order for the accommodation's own products (IN_ROOM_STORE) is priced from the owner's catalogue and fulfilled by the owner. A food order (FOOD_DELIVERY) is priced from the platform's menu through the FoodDeliveryProvider, is submitted to the platform after the approved payment and is then advanced by the events of the FoodOrderEventListener. This decision is made entirely in the service layer, with no direct dependency on specific third-party implementations.
+Each order's type determines which ports are used. An order for the property's own products (IN_ROOM_STORE) is priced from the owner's catalogue and fulfilled by the owner. A food order (FOOD_DELIVERY) is priced from the platform's menu through the FoodDeliveryProvider, submitted to the platform after the approved payment and its progress is then updated by the FoodOrderEventListener's events. The decision is made in the service layer, without a direct dependency on specific implementations of external providers. Figure 4.5 shows the six port interfaces together with their real and emulated adapters.
 
-## 4.5 Design Decisions and Technology Selection
+![Figure 4.5: The Port/Adapter pattern — real (green) and emulated (orange) adapters behind the six port interfaces.](/media/fig-4-4-ports-adapters.png)
 
-During the architecture design phase, the functional and non-functional characteristics of the available technologies were analysed systematically, evaluating the corresponding trade-offs. The main design decisions are documented in the sections that follow.
+## 4.5 Design Decisions and Technology Choices
 
-### 4.5.1 The Choice of Kotlin as the Single Language
+Before implementation, the available technologies were compared for their functional and non-functional characteristics and their trade-offs. The following sections present the main decisions.
 
-A central design decision of the thesis was to adopt **one and only one programming language for the entire software stack** — from the backend server to the Android kiosk application and the web management environment. This choice follows directly from the need to ensure absolute type consistency in a complex distributed system.
+### 4.5.1 Choosing Kotlin as the Single Language
 
-In the classic polyglot approach (polyglot architecture), the backend is usually developed in Java or Go, the Android application in Kotlin, and the web frontend in TypeScript. Although this approach allows the use of specialised tools in each area, it introduces a serious drawback: fragmentation of the code. The domain models, the DTOs and the validation rules are implemented several times in different languages, creating a constant risk of divergence and deserialisation errors that are only revealed at runtime.
+The main decision of the thesis was to use **one programming language across all the software**: on the server, in the Android kiosk application and in the web panel. The reason was type consistency in a system with many subsystems that communicate with each other.
 
-With **Kotlin Multiplatform (KMP)** [6], the problem is solved at its root. The shared code developed in the commonMain source set is compiled automatically to JVM bytecode for the backend server, to Android DEX bytecode for the kiosk application, and to WebAssembly for the browser. The entities, the DTOs and the port interfaces are defined once and reused as they are. Any field change is checked immediately by the compiler, providing guaranteed end-to-end type safety.
+In a multi-language approach (polyglot architecture), the backend is usually written in Java or Go, the Android application in Kotlin and the web frontend in TypeScript. Each subsystem uses the most suitable tools of its platform, but the code fragments: the models, DTOs and validation rules are written several times in different languages, with a constant risk of divergence and with deserialisation errors that only show up at runtime.
 
-In addition, Kotlin is a modern language with static type safety, strict null safety and full integration of asynchronous programming through coroutines. It offers performance equivalent to Java on the JVM, is the official language for Android [10][11], and through WebAssembly compilation delivers high execution speed in the browser. In terms of productivity, using a single language drastically simplifies project management: a single build system (Gradle), a shared development environment (IDE) and a unified mental model for the software engineer.
+**Kotlin Multiplatform (KMP)** [4] largely removes this problem. The shared code is compiled for every target of the system (§2.4, §4.1). Entities, DTOs and port interfaces are written once and used as they are. Every change to a field is checked immediately by the compiler across the whole system (end-to-end type safety).
+
+Kotlin is also a modern language with static types, null checks (null safety) and built-in support for asynchronous programming with coroutines. It runs on the JVM alongside Java and is the language Google prefers for Android (Kotlin-first) [27], [28]. In development practice, one language means one build system (Gradle), one development environment (IDE) and a single approach for the whole project.
 
 ### 4.5.2 Backend Framework: Ktor versus Spring Boot and ASP.NET Core
 
-Three prevailing solutions were considered for implementing the backend: **ASP.NET Core**, **Spring Boot** and **Ktor**.
+Three widely used options were considered for the backend: **ASP.NET Core**, **Spring Boot** and **Ktor**.
 
-**ASP.NET Core** was ruled out immediately, since it is based on the C# ecosystem. Choosing it would have undermined the KMP strategy, making it impossible to share the :domain and :data modules on the server.
+**ASP.NET Core** was ruled out from the start because it is based on C#. It would have cancelled the KMP strategy, since :domain and :data could not have been used on the server.
 
-**Spring Boot** is the most widespread framework in the JVM ecosystem, with support for Kotlin. However, its architecture was designed historically for Java and relies on extensive use of reflection mechanisms and annotations (@Autowired, @Component, @RestController). This approach introduces implicit behaviour and heavy automatic configuration (auto-configuration) [22], hiding the execution flow. In addition, Spring Boot burdens start-up with significant memory consumption and introduces complexity in making its classic execution model work with Kotlin Coroutines.
+**Spring Boot** is the most widely used JVM framework and supports Kotlin. It was originally designed for Java, however, and makes extensive use of reflection and annotations (@Autowired, @Component, @RestController). It also relies on auto-configuration, which sets up the application according to the libraries it finds on the classpath [29]; in the author's assessment, this implicit behaviour makes the execution flow less visible.
 
-**Ktor** [16], developed by JetBrains exclusively for Kotlin, offers a radically different philosophy. It is built entirely on Kotlin Coroutines, ensuring non-blocking asynchronous execution for every request. It does not use reflection for routing, but a declarative Kotlin DSL in which every route and parameter is defined explicitly in the code. Its architecture is fully modular: each individual function (authentication, CORS, JSON serialisation, status pages) is installed explicitly as a distinct plugin. This explicitness is completely aligned with the principles of Clean Architecture, since all dependencies and control flows remain visible and verifiable.
+**Ktor** [30], which JetBrains develops specifically for Kotlin, follows a different philosophy. It is built on Kotlin Coroutines, so that, while a request waits on an external service, no server thread is held (non-blocking I/O). It does not use reflection for routing: the routes and their parameters are declared explicitly in a Kotlin DSL. It is also modular: every feature (authentication, CORS, JSON serialisation, status pages) is installed explicitly as a plugin. This explicitness fits the principles of Clean Architecture, since the dependencies and the control flow are visible in the code.
 
-The table below compares the three candidate frameworks:
+Table 4.1 compares the three frameworks:
+
+**Table 4.1: Comparison of the candidate backend frameworks**
 
 | Comparison Criterion | Ktor | Spring Boot | ASP.NET Core |
 |---|---|---|---|
-| Language & KMP Compatibility | Native Kotlin (Full KMP sharing) | Java / Kotlin (Partial KMP use) | C# (.NET — Incompatible with KMP) |
+| Language & KMP Compatibility | Kotlin (Full sharing through KMP) | Java / Kotlin (Partial KMP use) | C# (.NET — Incompatible with KMP) |
 | I/O Execution Model | Non-blocking (Kotlin Coroutines) | Thread pool / Project Reactor (WebFlux) | Non-blocking (async / await) |
-| Reflection Mechanism | None (Explicit code declaration) | Extensive (Runtime annotations) | Moderate (Dependency injection reflection) |
-| Configuration Philosophy | Explicit Modular Plugins via DSL | Convention over Configuration (Auto-config) | Middleware Pipeline Registration |
-| Start-up Time & Memory | Extremely low (\< 1 sec, \~50MB RAM) | Higher (5–15 sec, 250MB+ RAM) | Low (1–3 sec, \~80MB RAM) |
+| Reflection Mechanism | Minimal (Explicit code declaration) | Extensive (Runtime annotations) | Moderate (Dependency injection reflection) |
+| Configuration Philosophy | Explicit modular plugins via DSL | Convention over configuration (auto-config) | Registration in the middleware pipeline |
 
 ### 4.5.3 Multi-Tenancy Strategy: Schema-Per-Tenant
 
-The choice of isolation strategy in the database is a critical architectural decision [8][13]. As analysed in Chapter 2, three approaches were considered:
+How data is isolated in the database is one of the most important decisions of the architecture [6], [13]. Of the three models in Chapter 2:
 
-1. **Shared Schema:** It has minimal operating cost, but data security rests entirely on the correctness of the application's queries (WHERE tenant_id = ?). For a system that handles commercial transactions, the risk of data leakage due to a programming error was judged unacceptable.
-1. **Database-per-Tenant:** It offers maximum physical isolation, but introduces a disproportionate administrative burden (hundreds of independent connection pools, backup routines and a separate run of migrations per database), making it uneconomical for the scale of the application.
-1. **Schema-per-Tenant:** It is the best balance of isolation and operating efficiency. Each tenant enjoys an independent namespace in PostgreSQL, ensuring structural isolation at the database level. At the same time, the whole platform is served by a single, efficient connection pool (HikariCP), while creating a new tenant requires only running a DDL script inside the same database.
+1. **Shared Schema:** It has the lowest operating cost, but data security depends on the filter of every query (§2.2); for a system that handles commercial transactions, this risk was judged unacceptable.
+1. **Database-per-Tenant:** It gives the greatest physical isolation, but at a disproportionate administrative cost (separate connection pools, backups and migrations per database), which the scale of the application does not justify.
+1. **Schema-per-Tenant:** It was judged the best balance of isolation and operating efficiency for the system. Each tenant has its own namespace in PostgreSQL, so its data sits in its own tables and queries need no per-tenant filter. All tenants connect with the same database role, so isolation rests on selecting the right schema, which happens at a single point in the code (§4.3). The whole platform is served by one shared connection pool (HikariCP), and a new tenant is created by running DDL statements in the same database.
 
-The table below evaluates the three strategies:
+Table 4.2 compares the three strategies:
+
+**Table 4.2: Evaluation of the multi-tenancy strategies**
 
 | Evaluation Parameter | Shared Schema | Schema-per-Tenant (Chosen) | Database-per-Tenant |
 |---|---|---|---|
-| Level at Which Isolation Is Enforced | Application Level (WHERE filters) | RDBMS Level (PostgreSQL Schema) | Physical Level (Independent Database) |
-| Connection Pool Utilisation | Optimal (Shared pool) | Optimal (Shared pool via HikariCP) | Fragmented (Pool per database) |
-| Data Leakage Risk | Real (in case of a bug in the code) | None (ruled out through search_path) | None (full isolation) |
-| Backup Management per Tenant | Extremely complex | Simple (pg_dump -n tenant_x) | Simple (Backup of the whole database) |
-| Infrastructure Cost | Minimal | Low / Predictable | High (linear growth in resources) |
+| Level at Which Isolation Is Enforced | Application Level (WHERE filters) | Database structure (PostgreSQL Schema), with the schema selected by the application | Physical Level (Independent Database) |
+| Connection Pool Use | Optimal (shared pool) | Optimal (shared pool through HikariCP) | Fragmented (Pool per database) |
+| Data Leakage Risk | Real (in case of a bug in the code) | Limited (only the schema selection at one point has to be right) | Minimal (physical isolation) |
+| Per-Tenant Backup Management | Very complex | Simple (pg_dump -n tenant_x) | Simple (Backup of the whole database) |
+| Infrastructure Cost | Minimal | Low / Predictable | High (resources grow with the number of tenants) |
 
 ### 4.5.4 Shared Code: Kotlin Multiplatform
 
-Sharing source code through KMP solves the problem of keeping the interfaces in sync. The code of the :data module (DTOs, requests and responses) is written once and compiled directly to the corresponding targets.
+Sharing code through KMP addresses the problem of keeping server and clients in sync. The code of :data (DTOs, requests and responses) is written once and compiled for each target.
 
-The backend server serialises an OrderResponse object to JSON. The client (Android kiosk or web panel) deserialises the data using exactly the same OrderResponse class. The identity of the class at all levels rules out, by construction, field mismatch errors (type mismatches) or naming inconsistencies, eliminating the need to maintain external code generators or Swagger/OpenAPI schemas for the project's internal synchronisation.
+The server serialises an OrderResponse object to JSON, and the client (Android kiosk or web panel) deserialises it with exactly the same OrderResponse class. Because the class is the same everywhere, errors from mismatched fields (type mismatches) or names are limited by the structure of the code itself, and no code generators or Swagger/OpenAPI schemas are needed to keep the project in sync internally.
 
 ### 4.5.5 Web Panel: Compose Multiplatform (wasmJs)
 
-For developing the owners' web management environment, the traditional choice would have been a JavaScript/TypeScript framework (such as React or Vue). The adoption of **Compose Multiplatform with a WebAssembly (wasmJs) compilation target** [21] was dictated by the aim of absolute architectural uniformity in the UI layer.
+For the owners' web panel, the usual choice would have been a JavaScript/TypeScript framework (such as React or Vue). **Compose Multiplatform with the WebAssembly compilation target (wasmJs)** [31] was chosen so that the interface layer follows the same model across the whole system.
 
-WebAssembly (Wasm) [14] is a compact binary instruction format that runs inside the browser's sandbox at close to native speed. The support for WasmGC in modern browsers allowed JetBrains to develop the Kotlin/Wasm target, in which Kotlin code is compiled directly to Wasm without needing a heavy JavaScript runtime. Compose Multiplatform takes advantage of this by drawing the interface's graphical elements directly onto an HTML5 Canvas surface.
+The technical characteristics of WebAssembly [17], the Kotlin/Wasm target and canvas rendering were described in §2.4.
 
-The main advantages of this choice can be summarised as follows:
+The main advantages of the choice are the following:
 
-1. **A unified UI programming model:** The developer uses the same declarative Composable functions, the same state management (State) and the same architectural patterns on both Web and Android.
-1. **Direct code reuse:** The web panel consumes the Kotlin DTOs of the :data module directly, with no intermediate conversion interfaces.
-1. **Independence from the DOM:** Rendering through Canvas eliminates differences in appearance between different browsers and frees the application from the complexity of CSS frameworks.
+1. **A Single UI Programming Model:** The same declarative Composable functions, the same way of managing state (State) and the same architectural patterns are used on the web and on Android.
+1. **Direct Code Reuse:** The web panel uses the Kotlin DTOs of :data directly, without intermediate conversions.
+1. **Independence from the DOM:** Rendering onto a canvas reduces differences in appearance between browsers and needs no CSS frameworks.
 
-The main trade-off of this choice lies in the fact that the Kotlin/Wasm ecosystem is newer compared with the established JavaScript tooling, a drawback that is fully offset by the cohesion and code sharing it offers the system.
+The main drawback is that the Kotlin/Wasm ecosystem is younger than the established JavaScript tools; within this thesis, the consistency and code sharing it offers make up for that.
 
 ### 4.5.6 ORM: JetBrains Exposed
 
-Three approaches from the JVM ecosystem were considered for communicating with the relational database: **Hibernate/JPA**, **JOOQ** and **JetBrains Exposed**.
+Three JVM options were considered for talking to the relational database: **Hibernate/JPA**, **JOOQ** and **JetBrains Exposed**.
 
-**Hibernate/JPA** is the traditional ORM standard. However, it relies heavily on reflection, annotations and a complex entity lifecycle (managed, detached, transient states). In addition, it has no native support for non-blocking coroutines, requiring special settings so that it does not tie up Ktor's threads.
+**Hibernate/JPA** is the established ORM. It relies, however, on reflection, annotations and a complex entity lifecycle (managed, detached, transient states). In addition, it offers no native integration with Kotlin coroutines.
 
-**JOOQ** generates powerful type-safe code from an existing database schema (a database-first approach). However, it requires an additional code generation step during the build process, and presupposes an active database in order to generate the classes.
+**JOOQ** generates type-safe code from an existing database schema (database-first). It needs an extra code generation step in the build, however, usually with a running database.
 
-**Exposed** [15] follows the opposite, code-first approach through a Kotlin DSL:
+**Exposed** [32] takes the opposite, code-first approach, with a Kotlin DSL:
 
-- The structure of the tables is defined directly in the code as Kotlin objects (Table objects), making the source code the single source of truth for the structure of the database.
-- Queries are written with full type safety (type-safe DSL), where the compiler verifies the column names and data types already at build time.
-- It natively supports asynchronous execution through the suspendTransaction function, ideally integrating transactions into the Kotlin Coroutines environment.
-- It works without reflection or runtime annotations, keeping things clear and fast to execute.
+- Tables are defined in the code as Kotlin objects (Table objects), so the code is the single source for the database structure.
+- Queries are written with a type-safe DSL, and the compiler checks column names and their types already at build time.
+- It offers the suspendTransaction function, which fits transactions into the Kotlin Coroutines model. Database calls over JDBC remain blocking, as with any tool built on JDBC.
+- It does not rely on reflection or runtime annotations to define tables and queries, which keeps the flow of the code clear.
 
-The table below summarises the comparative evaluation of the ORM tools:
+Table 4.3 summarises the comparison:
+
+**Table 4.3: Comparison of the ORM tools**
 
 | Evaluation Criterion | JetBrains Exposed (Chosen) | Hibernate / JPA | JOOQ |
 |---|---|---|---|
-| Schema Definition (Source of Truth) | Code-first via the Kotlin Table DSL | Code-first via Java Annotations | Database-first via Code Generation |
-| Integration with Coroutines | Native (suspendTransaction) | Requires external thread bridging | Requires Reactive Extensions / R2DBC |
-| Reflection Mechanism | None | Extensive at runtime | None (generated code) |
-| Dependence on a Live DB at Build | None | None | Required for generation |
-| Ease of Multi-Schema Routing | Direct support for SET search_path | Complex Multi-tenancy configuration | Supported through configuration |
+| Schema Definition (Source of Truth) | Code-first through the Kotlin Table DSL | Code-first through Java Annotations | Database-first through Code Generation |
+| Coroutine Integration | Built-in (suspendTransaction) | Needs external thread bridging | Needs Reactive Extensions / R2DBC |
+| Reflection Mechanism | Minimal | Extensive at runtime | None (generated code) |
+| Live DB Dependency at Build | None | None | Usually required for generation |
+| Ease of Multi-Schema Routing | Direct support for SET search_path | Complex multi-tenancy configuration | Supported through configuration |
 
 ### 4.5.7 Authentication: JWT with Refresh Token Rotation
 
-Session and access management is implemented through **stateless JSON Web Tokens (JWT)** [18] in combination with a **refresh mechanism with rotation (Refresh Token Rotation)** [19].
+Authentication relies on **stateless JSON Web Tokens (JWT)** [21] with **refresh token renewal and rotation (Refresh Token Rotation)** [22].
 
-Regardless of the token type, all user passwords are stored in the database exclusively as cryptographic hashes using the **BCrypt** algorithm with a cost factor of 12 [20]. This factor was chosen so that the computation takes about 250ms on a modern processor, making dictionary or brute-force attacks uneconomical, without burdening the user's login experience.
+Independently of the tokens, users' passwords are stored in the database only as hashes with the **BCrypt** algorithm and a cost factor of 12 [20]. The factor was chosen so that the calculation takes about 250 ms (measured on the development computer): enough to make dictionary or brute-force attacks costly, without noticeably slowing down the user's login.
 
-The architectural choice was examined against classic authentication through stateful server sessions (stateful server sessions):
+The choice was compared with classic authentication through sessions kept by the server (stateful server sessions), as Table 4.4 shows:
+
+**Table 4.4: Stateless JWT versus stateful server sessions**
 
 | Comparison Parameter | Stateless JWT with Token Rotation (Chosen) | Stateful Server Sessions (Cookies) |
 |---|---|---|
-| Horizontal Scalability | Immediate (No memory sharing between servers) | Requires a distributed session cache (e.g. Redis) |
-| Database Load per Request | None (Verification of the cryptographic signature) | A mandatory query to retrieve the session on every call |
-| Access Token Exposure Time | Minimal (Short lifetime of 15 minutes) | Depends on the session timeout |
-| Access Revocation | Immediate by invalidating the refresh token | Immediate by deleting the session |
-| Suitability for Heterogeneous Clients | Ideal (Common HTTP Authorization header) | Vulnerable to CORS and WebAssembly restrictions |
+| Horizontal Scaling (Scalability) | Simpler (No shared memory between servers) | Needs a distributed session cache (e.g. Redis) |
+| Database Load per Request | Small (Signature verification and one or two short queries checking the account or the device) | A mandatory session lookup query on every call |
+| Access Token Exposure Window | Short (Short lifetime of 15 minutes) | Depends on the session timeout |
+| Revoking Access | Immediate for owners and devices, through the account status check and the deletion of refresh tokens | Immediate by deleting the session |
+| Suitability for Different Clients | Good (Shared HTTP Authorization header) | Limitations with CORS and WebAssembly |
 
-The access token deliberately has a short validity period (15 minutes for users and administrators), drastically limiting the window of threat in the event of interception. The refresh token is valid for 30 days and is used exclusively to issue a new access token without re-entering credentials.
+The access token deliberately has a short lifetime (15 minutes for users and administrators), so that an intercepted token can be used only for a short period. The refresh token is valid for 30 days and is used only to issue a new access token without entering the password again.
 
-Security is reinforced through the **Refresh Token Rotation** mechanism: every time a refresh token is used for renewal, it is deleted from the database before the new pair of tokens is issued. A refresh token that has already been used therefore cannot be used again (replay attack), since it no longer corresponds to any record. Renewal is also rejected if the owner's account has been deactivated in the meantime, while every owner request for the tenant's data checks that the account is still active, so that deactivation takes effect from the next request and does not wait for the access token to expire. The user themselves can change their password; the change deletes all of their refresh tokens, terminating their other sessions, and returns a new pair of tokens for the current one.
+With rotation (**Refresh Token Rotation**), every refresh token used for renewal is deleted from the database before the new pair of tokens is issued. A refresh token that has already been used is therefore rejected if it is sent again (replay attack), since it no longer corresponds to any record. Reuse is not treated as a sign of theft, however: the attempt is simply rejected, without revoking the tokens issued in the meantime. Renewal is also rejected if the owner's account has been deactivated in the meantime, and on every owner request for the tenant's data the backend checks that the account is still active, so that deactivation takes effect from the next request and not when the access token expires. Users can change their own password; the change deletes all of their refresh tokens, so that their other sessions can no longer be refreshed and end at the latest when their access token expires, and returns a new pair of tokens for the current one.
 
-Kiosk devices are a different case. A device does not log in with a password and does not use a refresh token; at activation it receives an access token with the DEVICE role and a validity of one year. So that revoking access does not depend on the token's expiry, the backend checks on every device request that the corresponding record exists and is active; deactivating or disconnecting a device by the owner thus takes effect from its very next request. This check costs one additional query per device request, which was considered an acceptable price for immediate revocation.
+Kiosk devices are a special case. A device has no password and uses no refresh token; when it is activated it receives an access token with the DEVICE role and a lifetime of one year. So that revocation does not depend on the token expiring, the backend checks on every device request that the device's record exists and is active; deactivating or disconnecting a device thus takes effect from its very next request. A device that has been disconnected or is unknown is rejected with 401, so its kiosk returns to the registration screen, while a deactivated device, or a device of a deactivated owner, is rejected with 403, so the kiosk keeps its activation and continues as soon as the device or the owner is reactivated. These checks cost two extra queries per device request, a price considered acceptable for immediate revocation.
 
-In addition, refresh tokens are not stored in plaintext in the database: they are stored exclusively as cryptographic hashes using the **SHA-256** function [29]. If the refresh_tokens table were ever compromised, the recorded hashes would be useless to an attacker, since authentication requires possession of the original, unhashed token.
+Finally, refresh tokens are not stored in plaintext, only as hashes with the **SHA-256** function [33]. If the refresh_tokens table leaked, the hashes would not be enough for an attacker, since renewal needs the token itself and not its hash. Figure 4.6 summarises the authentication flow and the rotation of the refresh token.
 
-### 4.5.8 Encrypting the Secrets of the External Services
+![Figure 4.6: Authentication flow — JWT access token and refresh token rotation.](/media/fig-4-5-jwt-flow.png)
 
-Integrating external services requires storing secret values: the SMTP server's password, the GEMI access key and the access keys of the delivery platforms of each owner. Unlike user passwords, these values cannot be stored as a hash, since the backend must retrieve them in their original form in order to use them. Two approaches were considered: keeping them in the server's environment variables, and storing them encrypted in the database.
+### 4.5.8 Encrypting the Secrets of External Services
 
-Environment variables are suitable for settings defined once at installation, but they require a server restart for every change and cannot hold values that differ per tenant, such as the platform keys of each owner. Storing them in the database with symmetric encryption using **AES-256 in GCM mode** [34] was therefore chosen, which provides both confidentiality and an integrity check of the ciphertext. For every encryption a new random 12-byte initialisation vector (IV) is generated, which is stored together with the ciphertext. The key is derived from a secret value set as an environment variable (SETTINGS_SECRET) and is never stored in the database, so that a copy of the database is not enough to recover the secrets. The platform's settings are read from the database on every use, so a change from the web panel is applied immediately, without a restart. None of the secrets is returned through the API; the interface is told only whether one has been set.
+Connecting to external services requires storing secrets: the SMTP server password, the company registry access key and each owner's delivery platform access keys. Unlike users' passwords, these cannot be stored as hashes, because the backend has to retrieve them as they are in order to use them. Two options were considered: environment variables on the server or encrypted storage in the database.
+
+Environment variables suit settings that are set once at installation, but every change requires restarting the server, and they cannot store values that differ per tenant, such as each owner's platform keys. Storage in the database was therefore chosen, with symmetric encryption using **AES-256 in GCM mode** [34], which protects both the content and the integrity of the encrypted text. Each encryption uses a new random 12-byte initialisation vector (IV), stored together with the encrypted text. The key is derived from a secret value set as an environment variable (SETTINGS_SECRET) and is not stored in the database, so a copy of the database is not enough to recover the secrets. The settings are read from the database on every use, so a change made in the web panel applies immediately, without a restart. No secret is returned through the API; the interface only receives an indication that a value has been set.

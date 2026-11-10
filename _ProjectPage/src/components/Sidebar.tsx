@@ -25,6 +25,13 @@ const icons: Record<string, ReactNode> = {
       <path d="M12 19h8" />
     </>,
   ),
+  showcase: svg(
+    <>
+      <rect x="3" y="4" width="18" height="13" rx="2" />
+      <path d="M10.5 8.5v4l3.5-2z" />
+      <path d="M8 21h8M12 17v4" />
+    </>,
+  ),
   report: svg(
     <>
       <path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z" />
@@ -78,13 +85,13 @@ export default function Sidebar({
 
   const inSectionOf = (id: string) => pathname === sectionPath(id) || pathname.startsWith(`${sectionPath(id)}/`)
 
-  // Arriving in a section (link, prev/next, citation, address bar) opens it, even if it was
-  // collapsed by hand earlier. Collapsing it again by hand sticks until the section changes.
+  // Every page change (sidebar, link, prev/next, citation, address bar) leaves only the current
+  // page's section expanded; sections opened or closed by hand stay that way until the next change.
   const currentSection = nav.find(({ id }) => inSectionOf(id))?.id
-  const [lastSection, setLastSection] = useState(currentSection)
-  if (currentSection !== lastSection) {
-    setLastSection(currentSection)
-    if (currentSection) setExpanded((s) => ({ ...s, [currentSection]: true }))
+  const [lastPath, setLastPath] = useState(pathname)
+  if (pathname !== lastPath) {
+    setLastPath(pathname)
+    setExpanded(Object.fromEntries(nav.map(({ id }) => [id, id === currentSection])))
   }
 
   // Keep the current page visible in the (scrollable) list.

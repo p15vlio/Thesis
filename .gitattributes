@@ -1,0 +1,30 @@
+# Line endings that must not depend on the cloner's Git settings (core.autocrlf).
+# Shell scripts and the Gradle wrapper run inside Linux containers / on Linux and macOS: always LF.
+gradlew     text eol=lf
+*.sh        text eol=lf
+*.py        text eol=lf
+Dockerfile  text eol=lf
+*.Dockerfile text eol=lf
+*.conf      text eol=lf
+
+# Windows launchers: always CRLF (cmd.exe misparses LF-only batch files).
+*.bat       text eol=crlf
+*.cmd       text eol=crlf
+*.ps1       text eol=crlf
+
+# Source and documentation: normal text, native line endings on checkout.
+*.kt        text
+*.kts       text
+*.md        text
+
+# Binary files: never touched.
+*.png       binary
+*.jpg       binary
+*.jar       binary
+*.docx      binary
+*.pdf       binary
+*.wasm      binary
+*.mp4       binary
+*.pptx      binary
+*.webp      binary
+*.apk       binary

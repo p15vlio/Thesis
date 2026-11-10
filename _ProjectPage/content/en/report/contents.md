@@ -1,0 +1,193 @@
+This page brings together the structure of the thesis and the lists of numbered figures and tables. Each entry leads to the corresponding chapter.
+
+## Table of Contents
+
+- [Abstract](/report/abstract)
+- [AI Use Statement](/report/aiStatement)
+- [1. Introduction](/report/ch1)
+  - 1.1 Problem Description
+  - 1.2 Motivation and Objectives
+    - 1.2.1 Academic Motivation
+    - 1.2.2 Practical Objectives
+  - 1.3 Contribution of the Thesis
+  - 1.4 Structure of the Text
+- [2. Theoretical Background and Related Work](/report/ch2)
+  - 2.1 The Short-Term Rental Market and Digital Services
+  - 2.2 Multi-Tenant Architecture and Data Isolation Models
+  - 2.3 Clean Architecture and the Port/Adapter (Hexagonal) Pattern
+  - 2.4 Kotlin Multiplatform — Technical Overview and Evaluation
+  - 2.5 Related Systems and Academic Work
+- [3. Requirements Analysis](/report/ch3)
+  - 3.1 Functional Requirements
+    - 3.1.1 Platform Administrator (Platform Admin)
+    - 3.1.2 Accommodation Owner (Owner)
+    - 3.1.3 Guest
+  - 3.2 Non-Functional Requirements
+    - 3.2.1 Structural Data Isolation
+    - 3.2.2 Security and Authentication
+    - 3.2.3 Zero-Friction Guest Interaction
+    - 3.2.4 External Service Extensibility (Port/Adapter Extensibility)
+    - 3.2.5 Reliability and Kiosk Operation (Kiosk Mode & Availability)
+    - 3.2.6 Data Consistency and Historical Integrity (Data Consistency)
+  - 3.3 User Roles and Use Cases
+    - 3.3.1 User Roles and Authentication System
+    - 3.3.2 Use Case 1: Placing an Order as a Guest
+    - 3.3.3 Use Case 2: Creating a New Tenant (Tenant Onboarding)
+    - 3.3.4 Use Case 3: Activating and Connecting a Kiosk Device
+    - 3.3.5 Use Case 4: Overseeing and Managing Orders as an Owner
+    - 3.3.6 Use Case 5: Ordering Food from a Delivery Platform
+  - 3.4 Assumptions and System Boundaries
+    - 3.4.1 External Services — Simulation through Emulated Adapters
+    - 3.4.2 Inventory Management
+    - 3.4.3 Localisation and Geographic Adaptability
+    - 3.4.4 Out of Scope — Future Extensions
+- [4. System Architecture](/report/ch4)
+  - 4.1 Architecture Overview and Module Structure
+  - 4.2 Clean Architecture as a Structural Constraint
+  - 4.3 Multi-Tenancy — Request Flow Architecture
+  - 4.4 Port/Adapter Pattern — Integrating External Services
+  - 4.5 Design Decisions and Technology Selection
+    - 4.5.1 The Choice of Kotlin as the Single Language
+    - 4.5.2 Backend Framework: Ktor versus Spring Boot and ASP.NET Core
+    - 4.5.3 Multi-Tenancy Strategy: Schema-Per-Tenant
+    - 4.5.4 Shared Code: Kotlin Multiplatform
+    - 4.5.5 Web Panel: Compose Multiplatform (wasmJs)
+    - 4.5.6 ORM: JetBrains Exposed
+    - 4.5.7 Authentication: JWT with Refresh Token Rotation
+    - 4.5.8 Encrypting the Secrets of the External Services
+- [5. Database Design](/report/ch5)
+  - 5.1 Creating and Preparing Schemas
+  - 5.2 The Public Schema — Platform Data
+    - 5.2.1 owners — Accommodation Owners
+    - 5.2.2 platform_admins — Platform Administrators
+    - 5.2.3 refresh_tokens — Session Refresh Tokens
+    - 5.2.4 audit_log — Action Log
+    - 5.2.5 platform_settings — Platform Settings
+  - 5.3 The Tenant Schema — Accommodation Data
+    - 5.3.1 properties — Properties
+    - 5.3.2 devices — Kiosk Devices
+    - 5.3.3 products — Products
+    - 5.3.4 product_property_overrides — Availability Overrides per Property
+    - 5.3.5 orders — Orders
+    - 5.3.6 order_items — Order Lines
+    - 5.3.7 payments — Payments
+    - 5.3.8 food_platform_connections — Connections to Delivery Platforms
+    - 5.3.9 property_food_platforms — Platforms per Property
+  - 5.4 Entity-Relationship Diagram
+  - 5.5 Design Decisions
+  - 5.6 Transactions and Concurrent Access
+- [6. Backend Implementation](/report/ch6)
+  - 6.1 REST API Structure and Routing Layers
+  - 6.2 Device Authentication and the DEVICE Role
+  - 6.3 Middleware Pipeline and Error Handling
+  - 6.4 Service Layer and Dependency Assembly
+  - 6.5 The Order Lifecycle
+  - 6.6 Connection to the Payment Provider
+  - 6.7 Integrating Food Delivery Platforms
+  - 6.8 Real External Services: Email, Company Registry and Geocoding
+  - 6.9 Event Logging and the Action Log
+  - 6.10 Security Hardening
+  - 6.11 An Example of a Full Request Cycle
+- [7. Owner Web Panel](/report/ch7)
+  - 7.1 Build Pipeline and Bundle Distribution
+  - 7.2 Navigation: The Screen Model
+  - 7.3 Main Screens by Role
+  - 7.4 Role-Based Access and the Side Menu
+  - 7.5 ApiClient: Communication and Token Renewal
+  - 7.6 Property Management: Address Search and Guest Information
+  - 7.7 Delivery Platforms, Product Import and Orders
+  - 7.8 Owner Onboarding and Platform Settings
+  - 7.9 Data Refresh, Errors and Concurrent Actions
+  - 7.10 Reusing Visual Components
+- [8. Guest Kiosk Application](/report/ch8)
+  - 8.1 Role and Place in the Architecture
+  - 8.2 The Device Activation Flow
+  - 8.3 Kiosk Mode through the Android LockTask API
+  - 8.4 The Order Flow and Navigation
+  - 8.5 Card Reading and Payment
+  - 8.6 Order Status Tracking and Inactivity
+  - 8.7 Designing for Kiosk Operation
+  - 8.8 Local Storage: DataStore and Encrypted Preferences
+  - 8.9 Independence from the Payment Provider
+- [9. System Integration and Demonstration](/report/ch9)
+  - 9.1 The Full Operating Flow
+  - 9.2 Development and Demonstration Environment
+  - 9.3 Verification of the Integrated Flow
+  - 9.4 Known Limitations
+  - 9.5 Technologies, Versions and Code Size
+  - 9.6 Development Process
+- [10. Conclusions and Future Work](/report/ch10)
+  - 10.1 Assessment of the Academic Objectives
+  - 10.2 Requirements versus Outcomes per Role
+  - 10.3 Conclusions on Kotlin Multiplatform in Practice
+  - 10.4 Lessons from the Implementation
+  - 10.5 Limits of the Evaluation
+  - 10.6 Proposals for Future Extension
+  - 10.7 Closing Remarks
+- [Bibliography](/report/bibliography)
+- [Appendix A: API Reference](/api)
+  - A.1 User Authentication (/auth)
+  - A.2 Platform and Owner Management (/owners, /admin, /company-lookup, /settings)
+  - A.3 Property Management (/properties, /geocode)
+  - A.4 Kiosk Device Management (/properties/{propertyId}/devices, /devices)
+  - A.5 Product Catalogue and Availability (/products, /food-platforms)
+  - A.6 Order Management (/orders, /device/orders, /food)
+  - A.7 Payments and Auxiliary Services (/payments, /dashboard, /audit-logs, /health)
+- [Appendix B: Glossary of Foreign Terms and Acronyms](/appendix)
+  - B.1 Foreign terms
+  - B.2 Acronyms
+
+## List of Figures
+
+- [Figure 2.1](/report/ch2): The three isolation models of a multi-tenant system — shared schema, schema-per-tenant, database-per-tenant
+- [Figure 4.1](/report/ch4): Module structure of the monorepo and direction of dependencies
+- [Figure 4.2](/report/ch4): Clean Architecture in the system — dependencies point towards the core
+- [Figure 4.3](/report/ch4): Hierarchy of entities and mapping to PostgreSQL schemas
+- [Figure 4.4](/report/ch4): Routing of a request to the right tenant schema through the TenantContext
+- [Figure 4.5](/report/ch4): Port/Adapter pattern — real (green) and emulated (orange) adapters behind the six port interfaces
+- [Figure 4.6](/report/ch4): Authentication flow — JWT access token and refresh token rotation
+- [Figure 5.1](/report/ch5): Creation and update of a tenant schema — provisionTenant() when an owner is created and at every application start
+- [Figure 5.2](/report/ch5): Entities of the public schema — platform data
+- [Figure 5.3](/report/ch5): Entities of the tenant schema — accommodation data
+- [Figure 6.1](/report/ch6): Middleware pipeline — order of processing of a request from the Ktor engine to the service layer
+- [Figure 6.2](/report/ch6): Order state machine — allowed transitions and who triggers each one (payment, owner, platform)
+- [Figure 7.1](/report/ch7): Screens of the owner-web panel and navigation per role
+- [Figure 7.2](/report/ch7): The platform administrator's dashboard
+- [Figure 7.3](/report/ch7): The owner's dashboard
+- [Figure 7.4](/report/ch7): The property form with the address search
+- [Figure 7.5](/report/ch7): Connecting the delivery platforms
+- [Figure 7.6](/report/ch7): An order with its lines and its payment
+- [Figure 7.7](/report/ch7): The create-owner form, starting from the VAT ID
+- [Figure 7.8](/report/ch7): The settings of the external services
+- [Figure 8.1](/report/ch8): Device activation flow — QR scan or manual entry, resolve, activate, token issue and storage
+- [Figure 8.2](/report/ch8): The setup screen of the kiosk application
+- [Figure 8.3](/report/ch8): Screen flow of the guest — from the home screen to payment and order tracking
+- [Figure 8.4](/report/ch8): Choosing a store
+- [Figure 8.5](/report/ch8): The in-room store with a cart
+- [Figure 8.6](/report/ch8): A restaurant menu with the delivery cost in the cart
+- [Figure 8.7](/report/ch8): The payment screen waiting for a card
+- [Figure 8.8](/report/ch8): The payment screen on a device without the card reader service
+- [Figure 8.9](/report/ch8): Order confirmation
+- [Figure 8.10](/report/ch8): Order tracking, with the cancel button before the preparation starts
+- [Figure 8.11](/report/ch8): Order tracking after the owner has started the preparation
+- [Figure 8.12](/report/ch8): The accommodation information screen
+- [Figure 9.1](/report/ch9): Sequence diagram of the complete end-to-end flow, from the creation of an owner to the delivery of a food order
+- [Figure 9.2](/report/ch9): Docker Compose topology — three services and their start-up dependencies
+
+## List of Tables
+
+- [Table 2.1](/report/ch2): Comparison of the three data isolation models
+- [Table 3.1](/report/ch3): System roles, data scope and authentication mechanism
+- [Table 4.1](/report/ch4): Comparison of the candidate backend frameworks
+- [Table 4.2](/report/ch4): Evaluation of the multi-tenancy strategies
+- [Table 4.3](/report/ch4): Comparison of the ORM tools
+- [Table 4.4](/report/ch4): Stateless JWT versus stateful server sessions
+- [Table 5.1](/report/ch5): Fundamental design decisions of the database
+- [Table 6.1](/report/ch6): API endpoints by category, JWT requirement and role
+- [Table 6.2](/report/ch6): Mapping of exceptions to HTTP responses
+- [Table 9.1](/report/ch9): Groups of checks in the verification of the integrated flow
+- [Table 9.2](/report/ch9): Main technologies, libraries and versions
+- [Table 9.3](/report/ch9): Source code size per module
+- [Table 10.1](/report/ch10): Functional requirements versus outcomes per role
+- [Table B.1](/appendix): Foreign terms, Greek rendering and explanation
+- [Table B.2](/appendix): Acronyms, full form and explanation

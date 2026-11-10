@@ -1,0 +1,60 @@
+{
+  "restaurants": [
+    {
+      "id": "box-3001",
+      "name": "Trattoria Il Giardino",
+      "cuisine": "Italian",
+      "rating": 4.5,
+      "deliveryFeeCents": 99,
+      "etaMinutes": 45,
+      "minOrderCents": 1200,
+      "menu": [
+        { "id": "box-3001-01", "name": "Lasagne Bolognese", "description": "Baked pasta layers with slow-cooked beef ragu and bechamel", "priceCents": 1100, "category": "Pasta" },
+        { "id": "box-3001-02", "name": "Linguine Thalassinon", "description": "Linguine with mussels, shrimp and calamari in white wine sauce", "priceCents": 1450, "category": "Pasta" },
+        { "id": "box-3001-03", "name": "Risotto Manitarion", "description": "Creamy risotto with wild mushrooms and parmesan", "priceCents": 1200, "category": "Mains" },
+        { "id": "box-3001-04", "name": "Pizza Prosciutto Funghi", "description": "Tomato, mozzarella, ham and mushrooms", "priceCents": 1150, "category": "Pizza" },
+        { "id": "box-3001-05", "name": "Bruschetta", "description": "Grilled bread with tomato, basil and olive oil", "priceCents": 600, "category": "Starters" },
+        { "id": "box-3001-06", "name": "Caprese", "description": "Tomato, mozzarella di bufala and basil", "priceCents": 850, "category": "Salads" },
+        { "id": "box-3001-07", "name": "Panna Cotta", "description": "Vanilla cream with forest fruit sauce", "priceCents": 550, "category": "Desserts" },
+        { "id": "box-3001-08", "name": "Nero 500ml", "description": "Still water", "priceCents": 100, "category": "Drinks" }
+      ]
+    },
+    {
+      "id": "box-3002",
+      "name": "Thalassinon Psarotaverna",
+      "cuisine": "Seafood",
+      "rating": 4.6,
+      "deliveryFeeCents": 199,
+      "etaMinutes": 50,
+      "minOrderCents": 1800,
+      "menu": [
+        { "id": "box-3002-01", "name": "Garides Saganaki", "description": "Shrimp baked in tomato sauce with feta and ouzo", "priceCents": 1500, "category": "Seafood" },
+        { "id": "box-3002-02", "name": "Kalamarakia Tiganita", "description": "Crispy fried baby squid with lemon", "priceCents": 1100, "category": "Seafood" },
+        { "id": "box-3002-03", "name": "Tsipoura Psiti", "description": "Grilled sea bream with lemon-olive oil sauce and boiled greens", "priceCents": 1700, "category": "Fish" },
+        { "id": "box-3002-04", "name": "Htapodi sti Hara", "description": "Grilled octopus with fava puree and capers", "priceCents": 1400, "category": "Seafood" },
+        { "id": "box-3002-05", "name": "Marides Tiganites", "description": "Fried smelt with lemon", "priceCents": 900, "category": "Seafood" },
+        { "id": "box-3002-06", "name": "Salata Marouli", "description": "Lettuce, dill, spring onion and lemon dressing", "priceCents": 650, "category": "Salads" },
+        { "id": "box-3002-07", "name": "Taramosalata", "description": "Fish roe dip with bread", "priceCents": 550, "category": "Starters" },
+        { "id": "box-3002-08", "name": "Ouzo Plomari 200ml", "description": "Traditional aniseed spirit", "priceCents": 800, "category": "Drinks" }
+      ]
+    },
+    {
+      "id": "box-3003",
+      "name": "Healthy Corner Salad & Bowl",
+      "cuisine": "Healthy & Salads",
+      "rating": 4.4,
+      "deliveryFeeCents": 149,
+      "etaMinutes": 35,
+      "minOrderCents": 900,
+      "menu": [
+        { "id": "box-3003-01", "name": "Bowl Kotopoulo", "description": "Grilled chicken, quinoa, avocado, cherry tomato and tahini dressing", "priceCents": 1050, "category": "Bowls" },
+        { "id": "box-3003-02", "name": "Bowl Salmon", "description": "Baked salmon, brown rice, edamame, cucumber and sesame", "priceCents": 1250, "category": "Bowls" },
+        { "id": "box-3003-03", "name": "Bowl Hummus & Falafel", "description": "Falafel, hummus, couscous, roasted vegetables and lemon", "priceCents": 950, "category": "Bowls" },
+        { "id": "box-3003-04", "name": "Salata Kritiki", "description": "Cretan dakos with tomato, mizithra, olives and capers", "priceCents": 850, "category": "Salads" },
+        { "id": "box-3003-05", "name": "Wrap Kotopoulo Caesar", "description": "Chicken, romaine and parmesan in a whole-wheat wrap", "priceCents": 750, "category": "Wraps" },
+        { "id": "box-3003-06", "name": "Smoothie Fraoula-Banana", "description": "Strawberry, banana and almond milk", "priceCents": 450, "category": "Drinks" },
+        { "id": "box-3003-07", "name": "Yiaourti me Meli", "description": "Greek yogurt with thyme honey and walnuts", "priceCents": 400, "category": "Desserts" }
+      ]
+    }
+  ]
+}

@@ -2,7 +2,7 @@
 
 **Konstantinos Vlioras**  
 Student ID: Π2015102  
-School email: <p15vlio@ionio.gr>
+Academic email: <p15vlio@ionio.gr>
 
 ## Supervisor
 

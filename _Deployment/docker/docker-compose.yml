@@ -1,0 +1,64 @@
+# Guest Desk: complete stack (PostgreSQL, Ktor backend, nginx + web panel).
+# Normally started with start-all.bat / start-all.sh and managed with manage.bat / manage.sh (in _Deployment).
+# By hand, from this folder:  docker compose up --build -d
+# The fixed project name keeps container, network, volume and image names unique to this stack
+# (guestdesk-postgres-1, guestdesk_postgres_data, ...), so it never collides with other compose projects.
+name: guestdesk
+
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB must be set in _Deployment/docker/.env}
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER must be set in _Deployment/docker/.env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in _Deployment/docker/.env}
+    ports:
+      # Published on the loopback interface only: the seed scripts on this PC need it, the LAN does not.
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ../../_ProjectThesis
+      dockerfile: ../_Deployment/docker/app.Dockerfile
+      target: backend
+    environment:
+      - JDBC_URL=jdbc:postgresql://postgres:5432/${POSTGRES_DB}
+      - DB_USER=${POSTGRES_USER}
+      - DB_PASSWORD=${POSTGRES_PASSWORD}
+      - PUBLIC_FRONTEND_URL=${PUBLIC_FRONTEND_URL:-http://localhost}
+      - PUBLIC_API_URL=${PUBLIC_API_URL:-http://localhost:8080}
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET must be set in _Deployment/docker/.env}
+      - SETTINGS_SECRET=${SETTINGS_SECRET:?SETTINGS_SECRET must be set in _Deployment/docker/.env}
+      - FOOD_PLATFORM_STEP_SECONDS=${FOOD_PLATFORM_STEP_SECONDS:-45}
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/api/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  frontend:
+    build:
+      context: ../../_ProjectThesis
+      dockerfile: ../_Deployment/docker/app.Dockerfile
+      target: frontend
+    ports:
+      - "80:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  postgres_data:

@@ -7,9 +7,10 @@ export type NavSection = { id: string; children: string[] }
 export const nav: NavSection[] = [
   { id: 'overview', children: ['introduction', 'architecture', 'technologies'] },
   { id: 'gettingStarted', children: ['installation', 'flows'] },
+  { id: 'showcase', children: ['presentation', 'demo', 'screenshots'] },
   {
     id: 'report',
-    children: ['ch1', 'ch2', 'ch3', 'ch4', 'ch5', 'ch6', 'ch7', 'ch8', 'ch9', 'ch10', 'bibliography'],
+    children: ['abstract', 'aiStatement', 'contents', 'ch1', 'ch2', 'ch3', 'ch4', 'ch5', 'ch6', 'ch7', 'ch8', 'ch9', 'ch10', 'bibliography'],
   },
   { id: 'api', children: [] },
   { id: 'appendix', children: [] },

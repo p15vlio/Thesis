@@ -47,8 +47,8 @@ export default function Page({ page, wide }: { page: NavPage; wide: boolean }) {
   const next = pages[index + 1]
 
   return (
-    <div className="grid gap-10 xl:grid-cols-[minmax(0,1fr)_13rem]">
-      <article ref={setRoot} className={wide ? '' : 'max-w-3xl'}>
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-10 xl:grid-cols-[minmax(0,1fr)_13rem]">
+      <article ref={setRoot} className={wide ? 'min-w-0' : 'min-w-0 max-w-3xl'}>
         {page.parentKey && (
           <p className="mb-2 text-xs font-medium uppercase tracking-wider text-accent">{t(page.parentKey)}</p>
         )}

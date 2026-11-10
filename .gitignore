@@ -8,10 +8,17 @@ dist/
 build/
 out/
 *.class
+.kotlin/
 *.jar
-!gradle/wrapper/gradle-wrapper.jar
+!**/gradle/wrapper/gradle-wrapper.jar
+!**/app/libs/reader-sdk.jar
 local.properties
 hs_err_pid*
+
+# Python (virtual environment created by the _Deployment scripts)
+.venv/
+__pycache__/
+*.pyc
 
 # IDEs
 .idea/
@@ -29,3 +36,4 @@ Thumbs.db
 
 # Claude Code
 .claude/
+

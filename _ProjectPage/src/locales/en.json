@@ -35,9 +35,20 @@
         "flows": "Flows"
       }
     },
+    "showcase": {
+      "title": "Presentation and demo",
+      "items": {
+        "presentation": "Presentation",
+        "demo": "Demo videos",
+        "screenshots": "Screenshots"
+      }
+    },
     "report": {
       "title": "Thesis Report",
       "items": {
+        "abstract": "Abstract",
+        "aiStatement": "AI Use Statement",
+        "contents": "Contents",
         "ch1": "1. Introduction",
         "ch2": "2. Theoretical Background and Related Work",
         "ch3": "3. Requirements Analysis",
@@ -62,6 +73,43 @@
     "about": {
       "title": "About",
       "items": {}
+    }
+  },
+  "slides": {
+    "slide": "Slide {{n}} of {{total}}",
+    "previous": "Previous",
+    "next": "Next",
+    "fullscreen": "Full screen"
+  },
+  "api": {
+    "search": "Search endpoint, path or type",
+    "allRoles": "All roles",
+    "expandAll": "Expand all",
+    "collapseAll": "Collapse all",
+    "noMatch": "No endpoint matches the filter.",
+    "parameters": "Parameters",
+    "requestBody": "Request body",
+    "responses": "Responses",
+    "example": "Example",
+    "schema": "Schema",
+    "arrayOf": "Array of",
+    "field": "Field",
+    "type": "Type",
+    "details": "Details",
+    "required": "required",
+    "optional": "optional",
+    "default": "default",
+    "rateLimited": "rate limit",
+    "rateLimitedHint": "Rate limited",
+    "in": {
+      "path": "path",
+      "query": "query"
+    },
+    "roles": {
+      "PUBLIC": "Public",
+      "PLATFORM_ADMIN": "Admin",
+      "OWNER": "Owner",
+      "DEVICE": "Device"
     }
   }
 }

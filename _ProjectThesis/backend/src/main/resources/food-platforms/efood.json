@@ -1,0 +1,81 @@
+{
+  "restaurants": [
+    {
+      "id": "efood-1001",
+      "name": "O Vasilis Souvlatzidiko",
+      "cuisine": "Souvlaki & Grill",
+      "rating": 4.6,
+      "deliveryFeeCents": 149,
+      "etaMinutes": 30,
+      "minOrderCents": 800,
+      "menu": [
+        { "id": "efood-1001-01", "name": "Souvlaki Hirino Pita", "description": "Pork skewer in pita with tomato, onion, tzatziki and fries", "priceCents": 400, "category": "Souvlaki" },
+        { "id": "efood-1001-02", "name": "Souvlaki Kotopoulo Pita", "description": "Chicken skewer in pita with lettuce, tomato, tzatziki and fries", "priceCents": 420, "category": "Souvlaki" },
+        { "id": "efood-1001-03", "name": "Gyros Hirino Pita", "description": "Pork gyros in pita with tomato, onion, tzatziki and fries", "priceCents": 400, "category": "Souvlaki" },
+        { "id": "efood-1001-04", "name": "Merida Kalamaki", "description": "Two pork skewers with fries, pita, salad and tzatziki", "priceCents": 1150, "category": "Plates" },
+        { "id": "efood-1001-05", "name": "Biftekia Gemista", "description": "Two grilled minced-meat patties stuffed with feta, with fries", "priceCents": 1250, "category": "Plates" },
+        { "id": "efood-1001-06", "name": "Horiatiki Salata", "description": "Tomato, cucumber, onion, olives and a slab of feta", "priceCents": 750, "category": "Salads" },
+        { "id": "efood-1001-07", "name": "Tzatziki", "description": "Strained yogurt with cucumber and garlic", "priceCents": 450, "category": "Starters" },
+        { "id": "efood-1001-08", "name": "Patates Tiganites", "description": "Hand-cut fried potatoes with oregano", "priceCents": 400, "category": "Sides" },
+        { "id": "efood-1001-09", "name": "Coca-Cola 500ml", "description": "Chilled soft drink", "priceCents": 200, "category": "Drinks" }
+      ]
+    },
+    {
+      "id": "efood-1002",
+      "name": "Pizzeria Napoli Athinaiki",
+      "cuisine": "Pizza & Pasta",
+      "rating": 4.4,
+      "deliveryFeeCents": 199,
+      "etaMinutes": 40,
+      "minOrderCents": 1000,
+      "menu": [
+        { "id": "efood-1002-01", "name": "Pizza Margherita", "description": "Tomato sauce, mozzarella and fresh basil", "priceCents": 900, "category": "Pizza" },
+        { "id": "efood-1002-02", "name": "Pizza Pepperoni", "description": "Tomato sauce, mozzarella and spicy pepperoni", "priceCents": 1100, "category": "Pizza" },
+        { "id": "efood-1002-03", "name": "Pizza Horiatiki", "description": "Tomato, peppers, olives, onion and feta", "priceCents": 1150, "category": "Pizza" },
+        { "id": "efood-1002-04", "name": "Pizza Quattro Formaggi", "description": "Mozzarella, gorgonzola, parmesan and graviera", "priceCents": 1250, "category": "Pizza" },
+        { "id": "efood-1002-05", "name": "Spaghetti Carbonara", "description": "Spaghetti with bacon, egg yolk, cream and parmesan", "priceCents": 950, "category": "Pasta" },
+        { "id": "efood-1002-06", "name": "Penne Arrabbiata", "description": "Penne in spicy tomato sauce with garlic", "priceCents": 850, "category": "Pasta" },
+        { "id": "efood-1002-07", "name": "Salata Caesar", "description": "Romaine, chicken, croutons and parmesan with Caesar dressing", "priceCents": 850, "category": "Salads" },
+        { "id": "efood-1002-08", "name": "Tiramisu", "description": "Mascarpone cream, espresso and cocoa", "priceCents": 550, "category": "Desserts" }
+      ]
+    },
+    {
+      "id": "efood-1003",
+      "name": "Mezedopoleio To Steki",
+      "cuisine": "Greek Taverna",
+      "rating": 4.7,
+      "deliveryFeeCents": 249,
+      "etaMinutes": 45,
+      "minOrderCents": 1200,
+      "menu": [
+        { "id": "efood-1003-01", "name": "Moussaka", "description": "Layers of aubergine, potato and spiced mince under creamy bechamel", "priceCents": 1050, "category": "Mains" },
+        { "id": "efood-1003-02", "name": "Pastitsio", "description": "Baked pasta with mince and bechamel", "priceCents": 950, "category": "Mains" },
+        { "id": "efood-1003-03", "name": "Giouvetsi Arni", "description": "Slow-baked lamb with orzo in tomato sauce", "priceCents": 1450, "category": "Mains" },
+        { "id": "efood-1003-04", "name": "Gemista", "description": "Tomatoes and peppers stuffed with rice and herbs", "priceCents": 900, "category": "Mains" },
+        { "id": "efood-1003-05", "name": "Spanakopita", "description": "Crispy phyllo pie with spinach and feta", "priceCents": 650, "category": "Pies" },
+        { "id": "efood-1003-06", "name": "Dolmadakia", "description": "Vine leaves stuffed with rice and herbs, served with lemon", "priceCents": 700, "category": "Starters" },
+        { "id": "efood-1003-07", "name": "Saganaki", "description": "Pan-fried kefalograviera cheese with lemon", "priceCents": 800, "category": "Starters" },
+        { "id": "efood-1003-08", "name": "Galaktoboureko", "description": "Semolina custard in crisp phyllo with syrup", "priceCents": 500, "category": "Desserts" },
+        { "id": "efood-1003-09", "name": "Krasi Hima 500ml", "description": "House white wine, carafe", "priceCents": 650, "category": "Drinks" }
+      ]
+    },
+    {
+      "id": "efood-1004",
+      "name": "Burger Athens Kouzina",
+      "cuisine": "Burgers",
+      "rating": 4.3,
+      "deliveryFeeCents": 179,
+      "etaMinutes": 35,
+      "minOrderCents": 900,
+      "menu": [
+        { "id": "efood-1004-01", "name": "Classic Burger", "description": "Beef patty, cheddar, lettuce, tomato and house sauce", "priceCents": 950, "category": "Burgers" },
+        { "id": "efood-1004-02", "name": "Bacon Burger", "description": "Beef patty, smoked bacon, cheddar and BBQ sauce", "priceCents": 1150, "category": "Burgers" },
+        { "id": "efood-1004-03", "name": "Chicken Burger", "description": "Crispy chicken fillet, lettuce, tomato and mayo", "priceCents": 900, "category": "Burgers" },
+        { "id": "efood-1004-04", "name": "Burger Halloumi", "description": "Grilled halloumi, rocket and sweet chili jam", "priceCents": 950, "category": "Burgers" },
+        { "id": "efood-1004-05", "name": "Patates Tiganites Megales", "description": "Large portion of fries with sea salt", "priceCents": 350, "category": "Sides" },
+        { "id": "efood-1004-06", "name": "Onion Rings", "description": "Crunchy battered onion rings", "priceCents": 450, "category": "Sides" },
+        { "id": "efood-1004-07", "name": "Milkshake Vanilia", "description": "Vanilla ice cream milkshake", "priceCents": 450, "category": "Drinks" }
+      ]
+    }
+  ]
+}

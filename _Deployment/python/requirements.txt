@@ -1,0 +1,5 @@
+# Python packages imported by seed_admin.py and seed_data.py.
+#   pip install -r requirements.txt   (start-all installs them into python/.venv)
+requests>=2.28,<3
+bcrypt>=4.0,<6
+psycopg2-binary>=2.9,<3

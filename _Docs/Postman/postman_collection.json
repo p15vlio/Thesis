@@ -1,0 +1,2468 @@
+{
+  "info": {
+    "name": "Guest Desk API",
+    "description": "Test collection for the Guest Desk backend (Ktor, base path /api).\n\nRun order the first time: 1a Login Admin, 2a Create Owner (saves owner_id, owner_schema, owner_email, owner_temp_password), 1b Login Owner, 3a Create Property, 4a Create Device, 4e Activate Device (saves device_token), 5a Create Product, 6a Create Order, 7a Initiate Payment (the order becomes CONFIRMED), then 6e PREPARING, 6f OUT_FOR_DELIVERY and 6g DELIVERED. Run 6a again before 7b and 6j: a paid order cannot be paid twice and a delivered order cannot be cancelled. Folders 9 to 11 cover food platforms, platform settings and lookups.\n\nRoles: PLATFORM_ADMIN (admin_token), OWNER (owner_token), DEVICE (device_token, kiosk). Tenant routes called as PLATFORM_ADMIN take the tenant via the schemaName query parameter. Only /health, /auth/login, /auth/refresh, /devices/resolve and /devices/{id}/activate are unauthenticated; /devices/{id}/ping needs the device token and /auth/change-password needs a JWT. Prices are euro cents. The payment acquirer and the food platforms are emulated; SMTP, the GEMH registry and geocoding are real.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080/api"
+    },
+    {
+      "key": "admin_token",
+      "value": ""
+    },
+    {
+      "key": "admin_refresh",
+      "value": ""
+    },
+    {
+      "key": "owner_token",
+      "value": ""
+    },
+    {
+      "key": "owner_refresh",
+      "value": ""
+    },
+    {
+      "key": "owner_id",
+      "value": ""
+    },
+    {
+      "key": "owner_schema",
+      "value": ""
+    },
+    {
+      "key": "owner_email",
+      "value": ""
+    },
+    {
+      "key": "owner_temp_password",
+      "value": ""
+    },
+    {
+      "key": "property_id",
+      "value": ""
+    },
+    {
+      "key": "device_id",
+      "value": ""
+    },
+    {
+      "key": "activation_code",
+      "value": ""
+    },
+    {
+      "key": "device_token",
+      "value": ""
+    },
+    {
+      "key": "product_id",
+      "value": ""
+    },
+    {
+      "key": "order_id",
+      "value": ""
+    },
+    {
+      "key": "payment_id",
+      "value": ""
+    },
+    {
+      "key": "catalog_product_id",
+      "value": ""
+    },
+    {
+      "key": "restaurant_id",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "0. Health",
+      "item": [
+        {
+          "name": "0a. Health Check",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/health"
+          }
+        }
+      ]
+    },
+    {
+      "name": "1. Auth",
+      "item": [
+        {
+          "name": "1a. Login - Platform Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.collectionVariables.set(\"admin_token\", json.accessToken);",
+                  "pm.collectionVariables.set(\"admin_refresh\", json.refreshToken);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@guestdesk.io\",\n  \"password\": \"Admin@GuestDesk1\",\n  \"role\": \"PLATFORM_ADMIN\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "description": "Demo admin created by _Deployment/python/seed_admin.py."
+        },
+        {
+          "name": "1b. Login - Owner",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.collectionVariables.set(\"owner_token\", json.accessToken);",
+                  "pm.collectionVariables.set(\"owner_refresh\", json.refreshToken);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{owner_email}}\",\n  \"password\": \"{{owner_temp_password}}\",\n  \"role\": \"OWNER\",\n  \"schemaName\": \"{{owner_schema}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "description": "Run after 2a (Create Owner), which saves owner_email, owner_temp_password and owner_schema. For the seeded demo owner set owner_email / owner_temp_password to owner@guestdesk.io / Owner@GuestDesk1 and owner_schema to that owner's schema (see GET /owners)."
+        },
+        {
+          "name": "1c. Refresh Token - Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.collectionVariables.set(\"admin_token\", json.accessToken);",
+                  "pm.collectionVariables.set(\"admin_refresh\", json.refreshToken);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/refresh",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{admin_refresh}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "description": "Refresh tokens rotate: the previous refresh token stops working."
+        },
+        {
+          "name": "1d. Login - Wrong Password (expect 401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 401\", () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@guestdesk.io\",\n  \"password\": \"wrong\",\n  \"role\": \"PLATFORM_ADMIN\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "1e. Change Password - Wrong Current (expect 400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{owner_token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/change-password",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"not-the-password\",\n  \"newPassword\": \"NewPassword123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "description": "A signed-in admin or owner changes their own password (POST /auth/change-password). A wrong current password is a 400, not a 401, so the web panel does not treat it as an expired session. On success the response is a new token pair and every other session of the user is signed out."
+        }
+      ]
+    },
+    {
+      "name": "2. Owners (Platform Admin)",
+      "item": [
+        {
+          "name": "2a. Create Owner",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "pm.collectionVariables.set(\"owner_id\", json.id);",
+                  "pm.collectionVariables.set(\"owner_schema\", json.schemaName);",
+                  "pm.collectionVariables.set(\"owner_email\", json.contactEmail);",
+                  "pm.collectionVariables.set(\"owner_temp_password\", json.temporaryPassword);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/owners",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"companyName\": \"Demo Hospitality S.A.\",\n  \"distinctiveTitle\": \"Demo Hotels\",\n  \"vatId\": \"123456789\",\n  \"gemhNumber\": \"000000000000\",\n  \"legalForm\": \"S.A.\",\n  \"companyActivity\": \"Hotels and similar accommodation\",\n  \"streetName\": \"Ermou\",\n  \"streetNo\": \"10\",\n  \"postalCode\": \"10563\",\n  \"city\": \"Athens\",\n  \"contactFirstName\": \"Nikos\",\n  \"contactLastName\": \"Papadopoulos\",\n  \"contactEmail\": \"owner@testhotel.gr\",\n  \"contactPhone\": \"+30 210 0000000\",\n  \"secondaryContactName\": null,\n  \"secondaryContactPhone\": null,\n  \"secondaryContactEmail\": null,\n  \"website\": \"https://example.com\",\n  \"notes\": null\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "description": "Owners are businesses (company name, VAT id, structured address, contact person). The backend generates a temporary password, returned once in temporaryPassword, and emails it when SMTP is configured."
+        },
+        {
+          "name": "2b. List Owners",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/owners"
+          }
+        },
+        {
+          "name": "2c. Get Owner by ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/owners/{{owner_id}}"
+          }
+        },
+        {
+          "name": "2d. Update Owner",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/owners/{{owner_id}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"companyName\": \"Demo Hospitality S.A. (updated)\",\n  \"distinctiveTitle\": \"Demo Hotels\",\n  \"gemhNumber\": \"000000000000\",\n  \"legalForm\": \"S.A.\",\n  \"companyActivity\": \"Hotels and similar accommodation\",\n  \"streetName\": \"Ermou\",\n  \"streetNo\": \"10\",\n  \"postalCode\": \"10563\",\n  \"city\": \"Athens\",\n  \"contactFirstName\": \"Nikos\",\n  \"contactLastName\": \"Papadopoulos\",\n  \"contactPhone\": \"+30 210 0000000\",\n  \"secondaryContactName\": null,\n  \"secondaryContactPhone\": null,\n  \"secondaryContactEmail\": null,\n  \"website\": \"https://example.com\",\n  \"notes\": null\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "description": "vatId and contactEmail are immutable and are not part of the update request."
+        },
+        {
+          "name": "2e. Get Owner - Not Found (expect 404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/owners/00000000-0000-0000-0000-000000000000"
+          }
+        },
+        {
+          "name": "2f. Deactivate Owner",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/owners/{{owner_id}}/deactivate"
+          },
+          "description": "Soft removal. Owners have no hard delete. The owner can no longer log in or refresh."
+        },
+        {
+          "name": "2g. Activate Owner",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/owners/{{owner_id}}/activate"
+          }
+        },
+        {
+          "name": "2h. Reset Owner Password",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test(\"Temporary password returned\", () => pm.expect(json.temporaryPassword).to.be.a('string'));",
+                  "pm.collectionVariables.set(\"owner_temp_password\", json.temporaryPassword);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/owners/{{owner_id}}/reset-password"
+          },
+          "description": "Platform admin resets a forgotten owner password: a new temporary password is emailed to the owner, returned once here, and all of the owner's sessions are signed out. Saves it to owner_temp_password for 1b."
+        }
+      ]
+    },
+    {
+      "name": "3. Properties (Owner)",
+      "item": [
+        {
+          "name": "3a. Create Property",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "pm.collectionVariables.set(\"property_id\", json.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{owner_token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/properties",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Seaside Apartment\",\n  \"streetName\": \"Akti Miaouli\",\n  \"streetNo\": \"5\",\n  \"postalCode\": \"18537\",\n  \"area\": \"Piraeus\",\n  \"level\": 2,\n  \"nameOnDoorbell\": \"Seaside\",\n  \"contactPhone\": \"+30 210 1111111\",\n  \"city\": \"Piraeus\",\n  \"notes\": null,\n  \"latitude\": 37.9429,\n  \"longitude\": 23.6469,\n  \"wifiName\": \"Seaside-Guest\",\n  \"wifiPassword\": \"welcome2024\",\n  \"checkOutTime\": \"11:00\",\n  \"houseRules\": \"No smoking. Quiet hours 22:00-08:00.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "description": "Address fields plus city and guest information (wifiName, wifiPassword, checkOutTime as HH:mm, houseRules) shown on the kiosk."
+        },
+        {
+          "name": "3b. List Properties",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{owner_token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/properties"
+          }
+        },
+        {
+          "name": "3c. Get Property by ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{owner_token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/properties/{{property_id}}"
+          }
+        },
+        {
+          "name": "3d. Update Property",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{owner_token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/properties/{{property_id}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Seaside Apartment (updated)\",\n  \"streetName\": \"Akti Miaouli\",\n  \"streetNo\": \"5\",\n  \"postalCode\": \"18537\",\n  \"area\": \"Piraeus\",\n  \"level\": 2,\n  \"nameOnDoorbell\": \"Seaside\",\n  \"contactPhone\": \"+30 210 1111111\",\n  \"city\": \"Piraeus\",\n  \"notes\": null,\n  \"latitude\": 37.9429,\n  \"longitude\": 23.6469,\n  \"wifiName\": \"Seaside-Guest\",\n  \"wifiPassword\": \"welcome2025\",\n  \"checkOutTime\": \"12:00\",\n  \"houseRules\": \"No smoking. Quiet hours 22:00-08:00.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "3e. Deactivate Property",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{owner_token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/properties/{{property_id}}/deactivate"
+          },
+          "description": "Cascades: all devices of the property are deactivated."
+        },
+        {
+          "name": "3f. Activate Property",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{owner_token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/properties/{{property_id}}/activate"
+          }
+        },
+        {
+          "name": "3g. Delete Property",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{owner_token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/properties/{{property_id}}"
+          },
+          "description": "Hard delete. Run last, or create another property first."
+        },
+        {
+          "name": "3h. List Properties (Admin, cross-tenant)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/properties?schemaName={{owner_schema}}"
+          },
+          "description": "PLATFORM_ADMIN selects the tenant with the schemaName query parameter. The same applies to every tenant route below."
+        }
+      ]
+    },
+    {
+      "name": "4. Devices (Owner)",
+      "item": [
+        {
+          "name": "4a. Create Device",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "pm.collectionVariables.set(\"device_id\", json.id);",
+                  "pm.collectionVariables.set(\"activation_code\", json.activationCode);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{owner_token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/properties/{{property_id}}/devices",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Lobby Kiosk\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "description": "Response contains activationCode and qrCodeBase64 (QR for the kiosk app). androidDeviceId is optional."
+        },
+        {
+          "name": "4b. List Devices for Property",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{owner_token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/properties/{{property_id}}/devices"
+          }
+        },
+        {
+          "name": "4c. Get Device by ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{owner_token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/devices/{{device_id}}"
+          }
+        },
+        {
+          "name": "4d. Resolve Device by Activation Code (no auth)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/devices/resolve?code={{activation_code}}"
+          },
+          "description": "Manual-entry flow: returns deviceId and schemaName for an activation code."
+        },
+        {
+          "name": "4e. Activate Device (no auth, kiosk flow)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.collectionVariables.set(\"device_token\", json.token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/devices/{{device_id}}/activate?schemaName={{owner_schema}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"activationCode\": \"{{activation_code}}\",\n  \"androidDeviceId\": \"postman-test-device\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "description": "Returns a long-lived DEVICE JWT in the token field. The code can be used once."
+        },
+        {
+          "name": "4f. Ping Device (device token, heartbeat)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{device_token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/devices/{{device_id}}/ping"
+          },
+          "description": "Heartbeat sent by the kiosk once a minute with its own device JWT; updates lastSeenAt. Run after 4e Activate Device."
+        },
+        {
+          "name": "4g. Deactivate Device",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{owner_token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/devices/{{device_id}}/deactivate"
+          },
+          "description": "Invalidates the device token immediately (device activity is checked on every request)."
+        },
+        {
+          "name": "4h. Reactivate Device",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{owner_token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/devices/{{device_id}}/reactivate"
+          }
+        },
+        {
+          "name": "4i. Unregister Device",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{owner_token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/devices/{{device_id}}/unregister"
+          },
+          "description": "Resets the device to unactivated with a fresh activation code/QR; keeps the record."
+        },
+        {
+          "name": "4j. Orders of a Device",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{owner_token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/devices/{{device_id}}/orders"
+          }
+        },
+        {
+          "name": "4k. Delete Device",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{owner_token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/devices/{{device_id}}"
+          }
+        },
+        {
+          "name": "4l. Deactivate Device (Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/devices/{{device_id}}/deactivate?schemaName={{owner_schema}}"
+          }
+        },
+        {
+          "name": "4m. Reactivate Device (Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/devices/{{device_id}}/reactivate?schemaName={{owner_schema}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Products (Owner)",
+      "item": [
+        {
+          "name": "5a. Create Product",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "pm.collectionVariables.set(\"product_id\", json.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{owner_token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/products",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Bottled Water 500ml\",\n  \"description\": \"Still mineral water\",\n  \"category\": \"BEVERAGE\",\n  \"basePrice\": 150,\n  \"imageUrl\": null\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "description": "basePrice is in euro cents. Categories: BEVERAGE, HOT_DRINK, FOOD, SNACK, ALCOHOL, PERSONAL_CARE, PHARMACY, OTHER."
+        },
+        {
+          "name": "5b. List Products (Owner)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{owner_token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/products"
+          }
+        },
+        {
+          "name": "5c. List Products (kiosk catalog, device JWT)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{device_token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/products"
+          },
+          "description": "For DEVICE tokens the list is filtered to products available at the device's property."
+        },
+        {
+          "name": "5d. Get Product by ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{owner_token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/products/{{product_id}}"
+          }
+        },
+        {
+          "name": "5e. Update Product",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{owner_token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/products/{{product_id}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Bottled Water 500ml\",\n  \"description\": \"Still mineral water, chilled\",\n  \"basePrice\": 175,\n  \"imageUrl\": null,\n  \"isAvailable\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "5f. Disable Product (tenant-wide)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{owner_token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/products/{{product_id}}/availability",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Bottled Water 500ml\",\n  \"description\": \"Still mineral water, chilled\",\n  \"basePrice\": 175,\n  \"imageUrl\": null,\n  \"isAvailable\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "description": "Body is an UpdateProductRequest; only isAvailable is applied."
+        },
+        {
+          "name": "5g. Enable Product (tenant-wide)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{owner_token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/products/{{product_id}}/availability",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Bottled Water 500ml\",\n  \"description\": \"Still mineral water, chilled\",\n  \"basePrice\": 175,\n  \"imageUrl\": null,\n  \"isAvailable\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "5h. Disable Product at Property",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{owner_token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/products/{{product_id}}/properties/{{property_id}}/availability",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"isAvailable\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "description": "Per-property override on top of the tenant-wide flag."
+        },
+        {
+          "name": "5i. Enable Product at Property",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{owner_token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/products/{{product_id}}/properties/{{property_id}}/availability",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"isAvailable\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "5j. Import Products from Platform",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{owner_token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/products/import",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"platform\": \"EFOOD\",\n  \"catalogProductIds\": [\n    \"{{catalog_product_id}}\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "description": "Run 9b and 9c first (9c saves catalog_product_id). Copies catalog items from a connected platform into the tenant's own products."
+        },
+        {
+          "name": "5k. Delete Product",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{owner_token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/products/{{product_id}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Orders",
+      "item": [
+        {
+          "name": "6a. Create Order (device JWT)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "pm.collectionVariables.set(\"order_id\", json.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{device_token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/orders?propertyId={{property_id}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"guestEmail\": \"guest@example.com\",\n  \"type\": \"IN_ROOM_STORE\",\n  \"items\": [\n    {\n      \"productId\": \"{{product_id}}\",\n      \"quantity\": 2\n    }\n  ],\n  \"notes\": \"Room 12\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "description": "Kiosk flow. type is IN_ROOM_STORE or FOOD_DELIVERY; FOOD_DELIVERY also needs platform and restaurantId, and items reference platform menu item ids."
+        },
+        {
+          "name": "6b. List Orders for Property",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{owner_token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/orders?propertyId={{property_id}}"
+          }
+        },
+        {
+          "name": "6c. List Orders by Status",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{owner_token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/orders?propertyId={{property_id}}&status=PENDING"
+          },
+          "description": "Statuses: PENDING, CONFIRMED, PREPARING, OUT_FOR_DELIVERY, DELIVERED, CANCELLED."
+        },
+        {
+          "name": "6d. Get Order by ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{owner_token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/orders/{{order_id}}"
+          }
+        },
+        {
+          "name": "6e. Update Status - PREPARING (after the payment 7a)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{owner_token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/orders/{{order_id}}/status",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"PREPARING\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "6f. Update Status - OUT_FOR_DELIVERY",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{owner_token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/orders/{{order_id}}/status",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"OUT_FOR_DELIVERY\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "6g. Update Status - DELIVERED",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{owner_token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/orders/{{order_id}}/status",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"DELIVERED\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "6h. Invalid Status Transition (expect 409)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{owner_token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/orders/{{order_id}}/status",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"PENDING\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "6i. Get Own Order (device JWT)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{device_token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/device/orders/{{order_id}}"
+          }
+        },
+        {
+          "name": "6j. Cancel Own Order (device JWT; run 6a first for a fresh order)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{device_token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/device/orders/{{order_id}}/cancel"
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. Payments",
+      "item": [
+        {
+          "name": "7a. Initiate Payment - contactless",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "pm.collectionVariables.set(\"payment_id\", json.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{device_token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/payments",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"orderId\": \"{{order_id}}\",\n  \"entryMode\": \"CARD_CONTACTLESS\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "description": "Emulated acquirer. entryMode: CARD_CONTACTLESS (approved), CARD_CHIP (pinVerified false is declined), CARD_MAGSTRIPE (declined). On success a receipt email is sent when SMTP is configured."
+        },
+        {
+          "name": "7b. Initiate Payment - chip + PIN (run 6a first for a fresh order)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{device_token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/payments",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"orderId\": \"{{order_id}}\",\n  \"entryMode\": \"CARD_CHIP\",\n  \"pinVerified\": true,\n  \"cardLast4\": \"4242\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "description": "The PIN itself never leaves the terminal; only the verification result is sent."
+        },
+        {
+          "name": "7c. List Payments of an Order (Owner)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{owner_token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/orders/{{order_id}}/payments"
+          },
+          "description": "OWNER role only."
+        }
+      ]
+    },
+    {
+      "name": "8. Dashboard and Admin",
+      "item": [
+        {
+          "name": "8a. Owner Dashboard Summary",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{owner_token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/dashboard/summary"
+          }
+        },
+        {
+          "name": "8b. Owner Stats (Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/owners/stats"
+          }
+        },
+        {
+          "name": "8c. Order Summary (Admin, platform-wide)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/orders/summary"
+          }
+        },
+        {
+          "name": "8d. Audit Logs (Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/audit-logs?limit=50&offset=0"
+          }
+        }
+      ]
+    },
+    {
+      "name": "9. Food Delivery Platforms",
+      "item": [
+        {
+          "name": "9a. List Platforms (connection status)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{owner_token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/food-platforms"
+          }
+        },
+        {
+          "name": "9b. Connect Platform",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{owner_token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/food-platforms/efood",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"apiKey\": \"demo-api-key-123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "description": "Platforms: efood, wolt, box (emulated). Any API key of at least 8 characters is accepted."
+        },
+        {
+          "name": "9c. Platform Catalog",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.collectionVariables.set(\"catalog_product_id\", json[0].id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{owner_token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/food-platforms/efood/catalog"
+          },
+          "description": "Requires a connected platform."
+        },
+        {
+          "name": "9d. Get Property Platforms",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{owner_token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/properties/{{property_id}}/food-platforms"
+          }
+        },
+        {
+          "name": "9e. Set Property Platforms",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{owner_token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/properties/{{property_id}}/food-platforms",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"platforms\": [\n    \"EFOOD\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "description": "Which connected platforms this property offers on the kiosk."
+        },
+        {
+          "name": "9f. Kiosk: List Restaurants (device JWT)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.collectionVariables.set(\"restaurant_id\", json[0].id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{device_token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/food/restaurants"
+          }
+        },
+        {
+          "name": "9g. Kiosk: Restaurant Menu (device JWT)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{device_token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/food/restaurants/efood/{{restaurant_id}}/menu"
+          }
+        },
+        {
+          "name": "9h. Disconnect Platform",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{owner_token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/food-platforms/efood"
+          }
+        }
+      ]
+    },
+    {
+      "name": "10. Platform Settings (Admin)",
+      "item": [
+        {
+          "name": "10a. Get SMTP Settings",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/settings/smtp"
+          }
+        },
+        {
+          "name": "10b. Update SMTP Settings",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/settings/smtp",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"host\": \"smtp.gmail.com\",\n  \"port\": 587,\n  \"security\": \"STARTTLS\",\n  \"username\": \"you@gmail.com\",\n  \"password\": \"your-gmail-app-password\",\n  \"fromAddress\": \"you@gmail.com\",\n  \"fromName\": \"Guest Desk\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "description": "security: STARTTLS, SSL or NONE. Omit password (null) to keep the stored one. The password is stored encrypted and never returned."
+        },
+        {
+          "name": "10c. Send Test Email",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/settings/smtp/test",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"toEmail\": \"you@gmail.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "10d. Get GEMH Settings",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/settings/gemh"
+          }
+        },
+        {
+          "name": "10e. Update GEMH API Key",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/settings/gemh",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"apiKey\": \"your-gemh-api-key\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "description": "API key from opendata.businessportal.gr."
+        }
+      ]
+    },
+    {
+      "name": "11. Lookups",
+      "item": [
+        {
+          "name": "11a. Company Lookup by VAT (Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/company-lookup?vatId=094019245"
+          },
+          "description": "Queries the GEMH registry; needs the API key from 10e."
+        },
+        {
+          "name": "11b. Geocode Search",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{owner_token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/geocode/search?q=Ermou 10 Athens"
+          },
+          "description": "Nominatim; the query needs at least 3 characters. Owner or admin."
+        },
+        {
+          "name": "11c. Reverse Geocode",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{owner_token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/geocode/reverse?lat=37.9755&lon=23.7348"
+          }
+        }
+      ]
+    }
+  ]
+}

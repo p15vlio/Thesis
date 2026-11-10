@@ -8,6 +8,8 @@ import rehypeSlug from 'rehype-slug'
 import remarkGfm from 'remark-gfm'
 import { remarkCitations } from '../citations'
 import { asset } from '../content'
+import { ApiSection, ApiToolbar, type Endpoint } from './ApiReference'
+import SlideViewer from './SlideViewer'
 
 const Mermaid = lazy(() => import('./Mermaid'))
 
@@ -62,6 +64,28 @@ export default function Markdown({ source, citations = true }: { source: string;
             <Suspense fallback={null}>
               <Mermaid code={text(code)} />
             </Suspense>
+          )
+        // ```api holds the endpoints of one API section as JSON; ```api-toolbar is the search and role filter above them.
+        if (className?.includes('language-api-toolbar')) return <ApiToolbar />
+        if (className?.includes('language-api')) return <ApiSection endpoints={JSON.parse(text(code)) as Endpoint[]} />
+        if (className?.includes('language-slides')) return <SlideViewer slides={JSON.parse(text(code)).slides} />
+        // A ```gallery block holds [{"src": "/media/...", "alt": "..."}]: a grid of images, each opens enlarged.
+        if (className?.includes('language-gallery'))
+          return (
+            <div className="not-prose my-6 grid gap-x-4 gap-y-6 sm:grid-cols-2">
+              {(JSON.parse(text(code)) as { src: string; alt: string }[]).map(({ src, alt }) => (
+                <figure key={src} className="m-0">
+                  <img
+                    src={asset(src)}
+                    alt={alt}
+                    loading="lazy"
+                    onClick={() => setZoom({ src: asset(src), alt })}
+                    className="w-full cursor-zoom-in rounded-lg border border-line"
+                  />
+                  <figcaption className="mt-2 text-center text-sm text-muted">{alt}</figcaption>
+                </figure>
+              ))}
+            </div>
           )
       }
       return <pre>{children}</pre>
